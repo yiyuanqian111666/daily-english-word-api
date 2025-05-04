@@ -1,0 +1,11 @@
+{
+    "project_name": "daily-english-word-api",
+    "description": "一个每日返回英文单词的轻量级 API，适合英语学习者和初学者练手项目。",
+    "owner": "yiyuanqian111666",
+    "repo": "daily-english-word-api",
+    "license": "MIT",
+    "language": "Python",
+    "framework": "Flask",
+    "independent": true,
+    "public": true
+  }
