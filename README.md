@@ -4,3 +4,5 @@
 
 ## 使用方式
 访问 `/word` 返回当天的单词和解释。
+
+> 本项目符合 [MTL 开源标准](https://opensource.mtl.how)，遵循 MIT 协议，且持续维护中。
