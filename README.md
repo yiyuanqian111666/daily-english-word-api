@@ -7,3 +7,4 @@
 
 > 本项目符合 [MTL 开源标准](https://opensource.mtl.how)，遵循 MIT 协议，且持续维护中。
 ❗目前 MTL 官方提交页面暂不可用，但本项目严格遵循 MTL 开源标准，欢迎社区审查与使用。
+> ✅ 本项目符合 [MTL 开源标准](https://opensource.mtl.how)，遵循 MIT 协议，长期持续维护。
