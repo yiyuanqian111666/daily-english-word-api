@@ -1,1 +1,4 @@
-flask
+fastapi>=0.111.0,<1.0        # 核心 API 框架
+uvicorn>=0.25.0,<1.0         # FastAPI 的 ASGI 服务器
+requests>=2.31.0,<3.0        # 可选，用于 HTTP 请求
+python-dotenv>=1.1.1,<2.0    # 可选，用于读取 .env 配置

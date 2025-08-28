@@ -1,51 +1,65 @@
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 import random
-import webbrowser
-import uvicorn
 
-app = FastAPI(
-    title="Daily English Word API",
-    description="一个简单又有趣的英语单词学习 API 🚀",
-    version="2.0.0"
-)
+# ------------------------------
+# 配置常量
+# ------------------------------
 
-# 模拟单词库
-WORDS = ["apple", "banana", "cat", "dog", "elephant", "future", "growth", "happiness"]
+APP_TITLE = "Daily English Word API"
+APP_DESCRIPTION = "一个简单又有趣的英语单词学习 API 🚀"
+APP_VERSION = "2.0.0"
 
-# 模拟 MTL 开源数据
+WORDS = [
+    "apple", "banana", "cat", "dog",
+    "elephant", "future", "growth", "happiness"
+]
+
 MTL_DATA = {
     "project": "MTL Open Source",
-    "description": "这是一个示例数据，未来可以替换成真实的 MTL 数据源。",
+    "description": "示例数据，可替换为真实 MTL 数据源",
     "version": "1.0"
 }
 
+# ------------------------------
+# 初始化 FastAPI
+# ------------------------------
 
-@app.get("/")
+app = FastAPI(
+    title=APP_TITLE,
+    description=APP_DESCRIPTION,
+    version=APP_VERSION
+)
+
+# ------------------------------
+# 辅助函数
+# ------------------------------
+
+def get_random_word():
+    """从单词库随机选择一个单词"""
+    word = random.choice(WORDS)
+    meaning = f"This is the meaning of '{word}' (示例翻译)"
+    return {"word": word, "meaning": meaning}
+
+# ------------------------------
+# API 路由
+# ------------------------------
+
+@app.get("/", summary="首页信息")
 def read_root():
-    return {
+    """返回首页信息及 API 文档链接"""
+    return JSONResponse({
         "message": "欢迎来到 Daily English Word API 🎉",
         "docs": "访问 http://127.0.0.1:8000/docs 查看 API 文档",
         "endpoints": ["/word", "/mtl"]
-    }
+    })
 
-
-@app.get("/word")
+@app.get("/word", summary="随机单词")
 def get_word():
-    word = random.choice(WORDS)
-    return {
-        "word": word,
-        "meaning": f"This is the meaning of '{word}' (示例翻译)"
-    }
+    """返回一个随机单词及示例翻译"""
+    return JSONResponse(get_random_word())
 
-
-@app.get("/mtl")
+@app.get("/mtl", summary="MTL 数据")
 def get_mtl_data():
-    return MTL_DATA
-
-
-if __name__ == "__main__":
-    url = "http://127.0.0.1:8000/docs"
-    print(f"✅ API 已启动！打开 {url} 试试吧～")
-    # 自动打开浏览器
-    webbrowser.open(url)
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    """返回示例 MTL 数据"""
+    return JSONResponse(MTL_DATA)
