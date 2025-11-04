@@ -1,65 +1,119 @@
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from flask import Flask, jsonify, request
+import sqlite3
+from datetime import date
 import random
 
-# ------------------------------
-# 配置常量
-# ------------------------------
+app = Flask(__name__)
+DB_NAME = "words.db"
 
-APP_TITLE = "Daily English Word API"
-APP_DESCRIPTION = "一个简单又有趣的英语单词学习 API 🚀"
-APP_VERSION = "2.0.0"
 
-WORDS = [
-    "apple", "banana", "cat", "dog",
-    "elephant", "future", "growth", "happiness"
-]
+# -------------------- 📦 数据库初始化 --------------------
+def init_db():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS words (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            word TEXT NOT NULL,
+            meaning TEXT NOT NULL,
+            example TEXT
+        );
+    ''')
+    conn.commit()
+    conn.close()
 
-MTL_DATA = {
-    "project": "MTL Open Source",
-    "description": "示例数据，可替换为真实 MTL 数据源",
-    "version": "1.0"
-}
 
-# ------------------------------
-# 初始化 FastAPI
-# ------------------------------
+# -------------------- 🔥 核心 API 功能 --------------------
 
-app = FastAPI(
-    title=APP_TITLE,
-    description=APP_DESCRIPTION,
-    version=APP_VERSION
-)
-
-# ------------------------------
-# 辅助函数
-# ------------------------------
-
-def get_random_word():
-    """从单词库随机选择一个单词"""
-    word = random.choice(WORDS)
-    meaning = f"This is the meaning of '{word}' (示例翻译)"
-    return {"word": word, "meaning": meaning}
-
-# ------------------------------
-# API 路由
-# ------------------------------
-
-@app.get("/", summary="首页信息")
-def read_root():
-    """返回首页信息及 API 文档链接"""
-    return JSONResponse({
-        "message": "欢迎来到 Daily English Word API 🎉",
-        "docs": "访问 http://127.0.0.1:8000/docs 查看 API 文档",
-        "endpoints": ["/word", "/mtl"]
+@app.route("/")
+def home():
+    return jsonify({
+        "message": "✅ Daily English Word API is running!",
+        "endpoints": {
+            "/api/today": "Get today's word",
+            "/api/random": "Get random word",
+            "/api/add": "Add new word (POST)",
+            "/api/list": "Get all words"
+        }
     })
 
-@app.get("/word", summary="随机单词")
-def get_word():
-    """返回一个随机单词及示例翻译"""
-    return JSONResponse(get_random_word())
 
-@app.get("/mtl", summary="MTL 数据")
-def get_mtl_data():
-    """返回示例 MTL 数据"""
-    return JSONResponse(MTL_DATA)
+@app.route("/api/today")
+def get_today_word():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT word, meaning, example FROM words")
+    words = cursor.fetchall()
+    conn.close()
+
+    if not words:
+        return jsonify({"error": "No words in database. Please add words first!"}), 404
+
+    index = date.today().toordinal() % len(words)
+    word, meaning, example = words[index]
+
+    return jsonify({
+        "date": str(date.today()),
+        "word": word,
+        "meaning": meaning,
+        "example": example
+    })
+
+
+@app.route("/api/random")
+def get_random_word():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT word, meaning, example FROM words")
+    words = cursor.fetchall()
+    conn.close()
+
+    if not words:
+        return jsonify({"error": "Database is empty. Add some words first!"}), 404
+
+    word, meaning, example = random.choice(words)
+    return jsonify({
+        "word": word,
+        "meaning": meaning,
+        "example": example
+    })
+
+
+@app.route("/api/add", methods=["POST"])
+def add_word():
+    data = request.json
+    if not data or "word" not in data or "meaning" not in data:
+        return jsonify({"error": "Missing 'word' or 'meaning' in request"}), 400
+
+    word = data["word"]
+    meaning = data["meaning"]
+    example = data.get("example", "")
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO words (word, meaning, example) VALUES (?, ?, ?)",
+                   (word, meaning, example))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "✅ Word added successfully!", "word": word})
+
+
+@app.route("/api/list")
+def list_words():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, word, meaning, example FROM words ORDER BY id DESC")
+    words = cursor.fetchall()
+    conn.close()
+
+    return jsonify([
+        {"id": w[0], "word": w[1], "meaning": w[2], "example": w[3]} for w in words
+    ])
+
+
+if __name__ == "__main__":
+    init_db()
+    print("🚀 Daily English Word API running at http://127.0.0.1:5000")
+    app.run(debug=True)
