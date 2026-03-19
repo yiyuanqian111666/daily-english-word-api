@@ -1,6 +1,6 @@
 {
   "project_name": "daily-english-word-api",
-  "description": "一个基于 Flask 的每日英文单词 API，返回词汇、定义和例句，适合英语学习者与 Python 初学者作为练手项目。",
+  "description": "一个基于 Flask 的每日英文单词学习 API，支持词汇、释义、例句、挑战评分与排行榜功能，适合英语学习者与 Python 初学者作为练手与进阶项目。",
   "owner": "yiyuanqian111666",
   "repo": "daily-english-word-api",
   "license": "MIT",
@@ -9,30 +9,52 @@
   "independent": true,
   "public": true,
   "homepage": "https://github.com/yiyuanqian111666/daily-english-word-api",
+
   "keywords": [
     "MTL",
     "open-source",
-    "english",
-    "api",
-    "flask",
+    "english-learning",
+    "vocabulary",
+    "flask-api",
     "education",
     "daily word",
-    "json api"
+    "json api",
+    "sqlite",
+    "backend",
+    "learning-app"
   ],
+
   "topics": [
     "英语学习",
     "RESTful API",
     "Python 初学者",
     "教育工具",
-    "教学型项目"
+    "Flask 项目",
+    "后端开发入门",
+    "单词记忆系统"
   ],
+
+  "features": [
+    "随机单词与对话学习",
+    "自动初始化词库（seed words）",
+    "单词释义与例句返回",
+    "挑战模式（20秒打字）",
+    "评分系统（SS-S-A-B-C-D-E）",
+    "连击（streak）机制",
+    "排行榜系统",
+    "RESTful API 设计",
+    "SQLite 数据存储"
+  ],
+
   "educational": true,
   "mtl_compliant": true,
+
   "contact": {
     "author": "yiyuanqian111666",
     "email": "yiyuanqian666@outlook.com"
   },
-  "version": "1.0.0",
+
+  "version": "1.1.0",
   "created_at": "2025-07-15",
-  "updated_at": "2025-07-15"
+  "updated_at": "2026-03-19"
 }
