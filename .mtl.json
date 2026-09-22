@@ -1,6 +1,6 @@
 {
   "project_name": "daily-english-word-api",
-  "description": "一个基于 Flask 的每日英文单词学习 API，支持词汇、释义、例句、挑战评分与排行榜功能，适合英语学习者与 Python 初学者作为练手与进阶项目。",
+  "description": "一个基于 Flask 的游戏化英文单词与场景对话学习 API，支持词汇搜索、分类过滤、挑战评分、连击机制与分页排行榜功能，适合英语学习者、游戏开发者与 Python 练手。",
   "owner": "yiyuanqian111666",
   "repo": "daily-english-word-api",
   "license": "MIT",
@@ -21,29 +21,30 @@
     "json api",
     "sqlite",
     "backend",
-    "learning-app"
+    "learning-app",
+    "gamification"
   ],
 
   "topics": [
     "英语学习",
     "RESTful API",
-    "Python 初学者",
+    "Python 开发者",
     "教育工具",
     "Flask 项目",
-    "后端开发入门",
+    "后端开发",
     "单词记忆系统"
   ],
 
   "features": [
-    "随机单词与对话学习",
-    "自动初始化词库（seed words）",
-    "单词释义与例句返回",
-    "挑战模式（20秒打字）",
-    "评分系统（SS-S-A-B-C-D-E）",
+    "随机单词与场景对话学习",
+    "分类过滤与关键词模糊检索",
+    "自动初始化内置词库（seed words）",
+    "挑战模式（限时打字与校验）",
+    "多级评分系统（SS 至 F）",
     "连击（streak）机制",
-    "排行榜系统",
-    "RESTful API 设计",
-    "SQLite 数据存储"
+    "支持分页的高效排行榜系统",
+    "RESTful API 设计与健全的生命周期管理",
+    "SQLite 轻量数据存储"
   ],
 
   "educational": true,
@@ -54,7 +55,7 @@
     "email": "yiyuanqian666@outlook.com"
   },
 
-  "version": "1.1.0",
+  "version": "2.0.0",
   "created_at": "2025-07-15",
   "updated_at": "2026-03-19"
 }

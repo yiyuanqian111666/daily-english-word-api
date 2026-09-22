@@ -1,7 +1,7 @@
-from flask import Flask, jsonify, request
-import sqlite3
 from datetime import datetime
 import random
+import sqlite3
+from flask import Flask, g, jsonify, request
 
 app = Flask(__name__)
 
@@ -10,17 +10,32 @@ CHALLENGE_LIMIT = 20
 CHALLENGE_TRIGGER = 3
 
 
-# ==================== 📦 数据库工具 ====================
+# ==================== 📦 数据库连接管理 ====================
 def get_db():
-    return sqlite3.connect(DB_NAME)
+    """使用 Flask 的 g 对象实现请求级别的数据库连接复用"""
+    if "db" not in g:
+        g.db = sqlite3.connect(DB_NAME)
+        g.db.row_factory = sqlite3.Row  # 启用字典/行映射，方便后续取值
+    return g.db
+
+
+@app.teardown_appcontext
+def close_db(exception):
+    """请求结束时自动关闭数据库连接"""
+    db = g.pop("db", None)
+    if db is not None:
+        db.close()
 
 
 def init_db():
-    with get_db() as conn:
-        cursor = conn.cursor()
+    """初始化数据库表及内置测试数据"""
+    with app.app_context():
+        db = get_db()
+        cursor = db.cursor()
 
-        # 单词表
-        cursor.execute("""
+        # 1. 单词表
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS words (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 word TEXT NOT NULL,
@@ -29,19 +44,23 @@ def init_db():
                 level INTEGER DEFAULT 1,
                 category TEXT DEFAULT 'general'
             )
-        """)
+        """
+        )
 
-        # 对话表
-        cursor.execute("""
+        # 2. 对话表
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS dialogs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 content TEXT NOT NULL,
                 scene TEXT DEFAULT 'daily'
             )
-        """)
+        """
+        )
 
-        # 挑战记录
-        cursor.execute("""
+        # 3. 挑战记录表
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS challenges (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 mode TEXT,
@@ -51,11 +70,11 @@ def init_db():
                 streak INTEGER,
                 created_at TEXT
             )
-        """)
+        """
+        )
 
         seed_words(cursor)
-
-        conn.commit()
+        db.commit()
 
 
 # ==================== 🌱 初始词库 ====================
@@ -79,10 +98,13 @@ def seed_words(cursor):
         ("power", "力量", "Knowledge is power."),
     ]
 
-    cursor.executemany("""
+    cursor.executemany(
+        """
         INSERT INTO words (word, meaning, example)
         VALUES (?, ?, ?)
-    """, basic_words)
+    """,
+        basic_words,
+    )
 
 
 # ==================== 🎯 评分系统 ====================
@@ -109,185 +131,265 @@ def calculate_grade(used_time, success, streak):
 # ==================== 🏠 首页 ====================
 @app.route("/")
 def home():
-    return jsonify({
-        "message": "🎮 Daily English Word API (Enhanced)",
-        "features": [
-            "Word / Dialog learning",
-            "Auto seed vocabulary",
-            "Challenge system",
-            "Leaderboard ranking",
-            "Better maintainability"
-        ]
-    })
+    return jsonify(
+        {
+            "message": "🎮 Daily English Word API (Optimized Version)",
+            "version": "2.0",
+            "features": [
+                "Word / Dialog learning with filters",
+                "Challenge & Streak scoring system",
+                "Paginated Leaderboard",
+                "Data management & search",
+            ],
+        }
+    )
 
 
 # ==================== 📘 学习接口 ====================
-@app.route("/api/learn")
+@app.route("/api/learn", methods=["GET"])
 def learn():
     mode = request.args.get("mode", "word")
     category = request.args.get("category")
     scene = request.args.get("scene")
 
-    with get_db() as conn:
-        cursor = conn.cursor()
+    db = get_db()
+    cursor = db.cursor()
 
-        if mode == "dialog":
-            query = "SELECT content FROM dialogs"
-            params = []
+    if mode == "dialog":
+        query = "SELECT content, scene FROM dialogs"
+        params = []
 
-            if scene:
-                query += " WHERE scene=?"
-                params.append(scene)
+        if scene:
+            query += " WHERE scene = ?"
+            params.append(scene)
 
-            query += " ORDER BY RANDOM() LIMIT 1"
+        query += " ORDER BY RANDOM() LIMIT 1"
+        cursor.execute(query, params)
+        row = cursor.fetchone()
 
-            cursor.execute(query, params)
-            row = cursor.fetchone()
+        if not row:
+            return jsonify({"error": "No dialogs found for the given scene"}), 404
 
-            content = row[0] if row else "No dialog found"
-
-            return jsonify({
+        return jsonify(
+            {
                 "mode": "dialog",
-                "content": content,
-                "challenge_after": CHALLENGE_TRIGGER
-            })
+                "content": row["content"],
+                "scene": row["scene"],
+                "challenge_after": CHALLENGE_TRIGGER,
+            }
+        )
 
-        else:
-            query = "SELECT word, meaning, example FROM words"
-            params = []
+    elif mode == "word":
+        query = "SELECT word, meaning, example, category, level FROM words"
+        params = []
 
-            if category:
-                query += " WHERE category=?"
-                params.append(category)
+        if category:
+            query += " WHERE category = ?"
+            params.append(category)
 
-            query += " ORDER BY RANDOM() LIMIT 1"
+        query += " ORDER BY RANDOM() LIMIT 1"
+        cursor.execute(query, params)
+        row = cursor.fetchone()
 
-            cursor.execute(query, params)
-            row = cursor.fetchone()
+        if not row:
+            return jsonify({"error": "No words found for the given category"}), 404
 
-            if not row:
-                return jsonify({"error": "No words found"}), 404
-
-            return jsonify({
+        return jsonify(
+            {
                 "mode": "word",
-                "word": row[0],
-                "meaning": row[1],
-                "example": row[2],
-                "challenge_after": CHALLENGE_TRIGGER
-            })
+                "word": row["word"],
+                "meaning": row["meaning"],
+                "example": row["example"],
+                "category": row["category"],
+                "level": row["level"],
+                "challenge_after": CHALLENGE_TRIGGER,
+            }
+        )
+    else:
+        return jsonify({"error": "Invalid learning mode. Use 'word' or 'dialog'."}), 400
 
 
 # ==================== 🧠 提交挑战 ====================
 @app.route("/api/challenge/submit", methods=["POST"])
 def submit_challenge():
-    data = request.json or {}
+    data = request.json
+    if not data:
+        return jsonify({"error": "Missing JSON body"}), 400
 
-    used_time = int(data.get("used_time", CHALLENGE_LIMIT))
-    success = bool(data.get("success", False))
-    mode = data.get("mode", "word")
-    content = data.get("content", "")
-    streak = int(data.get("streak", 0))
+    try:
+        used_time = int(data.get("used_time", CHALLENGE_LIMIT))
+        success = bool(data.get("success", False))
+        mode = data.get("mode", "word")
+        content = data.get("content", "")
+        streak = int(data.get("streak", 0))
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid data format for parameters"}), 400
 
     grade, new_streak = calculate_grade(used_time, success, streak)
 
-    with get_db() as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute(
+            """
             INSERT INTO challenges 
             (mode, content, used_time, grade, streak, created_at)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (
-            mode,
-            content,
-            used_time,
-            grade,
-            new_streak,
-            datetime.now().isoformat()
-        ))
+        """,
+            (
+                mode,
+                content,
+                used_time,
+                grade,
+                new_streak,
+                datetime.now().isoformat(),
+            ),
+        )
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
 
-        conn.commit()
-
-    return jsonify({
-        "success": success,
-        "grade": grade,
-        "used_time": used_time,
-        "streak": new_streak
-    })
-
-
-# ==================== 🏆 排行榜 ====================
-@app.route("/api/leaderboard")
-def leaderboard():
-    with get_db() as conn:
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT mode, content, used_time, grade, streak, created_at
-            FROM challenges
-            ORDER BY
-                CASE grade
-                    WHEN 'SS' THEN 0
-                    WHEN 'S' THEN 1
-                    WHEN 'A' THEN 2
-                    WHEN 'B' THEN 3
-                    WHEN 'C' THEN 4
-                    WHEN 'D' THEN 5
-                    WHEN 'E' THEN 6
-                    ELSE 7
-                END,
-                used_time ASC
-            LIMIT 20
-        """)
-
-        rows = cursor.fetchall()
-
-    return jsonify([
+    return jsonify(
         {
-            "mode": r[0],
-            "content": r[1],
-            "time": r[2],
-            "grade": r[3],
-            "streak": r[4],
-            "created_at": r[5]
-        } for r in rows
-    ])
+            "success": success,
+            "grade": grade,
+            "used_time": used_time,
+            "streak": new_streak,
+        }
+    )
+
+
+# ==================== 🏆 排行榜 (支持分页) ====================
+@app.route("/api/leaderboard", methods=["GET"])
+def leaderboard():
+    try:
+        limit = int(request.args.get("limit", 20))
+        offset = int(request.args.get("offset", 0))
+    except ValueError:
+        return jsonify({"error": "Invalid limit or offset parameters"}), 400
+
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute(
+        """
+        SELECT mode, content, used_time, grade, streak, created_at
+        FROM challenges
+        ORDER BY
+            CASE grade
+                WHEN 'SS' THEN 0
+                WHEN 'S' THEN 1
+                WHEN 'A' THEN 2
+                WHEN 'B' THEN 3
+                WHEN 'C' THEN 4
+                WHEN 'D' THEN 5
+                WHEN 'E' THEN 6
+                ELSE 7
+            END,
+            used_time ASC
+        LIMIT ? OFFSET ?
+    """,
+        (limit, offset),
+    )
+
+    rows = cursor.fetchall()
+
+    return jsonify(
+        [
+            {
+                "mode": r["mode"],
+                "content": r["content"],
+                "time": r["used_time"],
+                "grade": r["grade"],
+                "streak": r["streak"],
+                "created_at": r["created_at"],
+            }
+            for r in rows
+        ]
+    )
+
+
+# ==================== 🔍 单词检索接口 ====================
+@app.route("/api/words/search", methods=["GET"])
+def search_words():
+    keyword = request.args.get("q", "")
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute(
+        """
+        SELECT id, word, meaning, example, level, category 
+        FROM words 
+        WHERE word LIKE ? OR meaning LIKE ?
+        LIMIT 50
+    """,
+        (f"%{keyword}%", f"%{keyword}%"),
+    )
+
+    rows = cursor.fetchall()
+    return jsonify(
+        [
+            {
+                "id": r["id"],
+                "word": r["word"],
+                "meaning": r["meaning"],
+                "example": r["example"],
+                "level": r["level"],
+                "category": r["category"],
+            }
+            for r in rows
+        ]
+    )
 
 
 # ==================== ➕ 添加数据 ====================
 @app.route("/api/add", methods=["POST"])
 def add_data():
-    data = request.json or {}
+    data = request.json
+    if not data:
+        return jsonify({"error": "Missing JSON body"}), 400
 
-    with get_db() as conn:
-        cursor = conn.cursor()
+    db = get_db()
+    cursor = db.cursor()
 
+    try:
         if "word" in data:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO words (word, meaning, example, level, category)
                 VALUES (?, ?, ?, ?, ?)
-            """, (
-                data["word"],
-                data.get("meaning", ""),
-                data.get("example", ""),
-                data.get("level", 1),
-                data.get("category", "general")
-            ))
-
+            """,
+                (
+                    data["word"],
+                    data.get("meaning", ""),
+                    data.get("example", ""),
+                    data.get("level", 1),
+                    data.get("category", "general"),
+                ),
+            )
         elif "dialog" in data:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO dialogs (content, scene)
                 VALUES (?, ?)
-            """, (
-                data["dialog"],
-                data.get("scene", "daily")
-            ))
-
+            """,
+                (data["dialog"], data.get("scene", "daily")),
+            )
         else:
-            return jsonify({"error": "Invalid data"}), 400
+            return (
+                jsonify(
+                    {"error": "Invalid data structure. Provide 'word' or 'dialog'."}
+                ),
+                400,
+            )
 
-        conn.commit()
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": f"Failed to add data: {str(e)}"}), 500
 
-    return jsonify({"message": "✅ Added successfully"})
+    return jsonify({"message": "✅ Added successfully"}), 201
 
 
 # ==================== 🚀 启动 ====================
