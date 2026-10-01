@@ -1,61 +1,63 @@
 {
-  "project_name": "daily-english-word-api",
-  "description": "一个基于 Flask 的游戏化英文单词与场景对话学习 API，支持词汇搜索、分类过滤、挑战评分、连击机制与分页排行榜功能，适合英语学习者、游戏开发者与 Python 练手。",
-  "owner": "yiyuanqian111666",
-  "repo": "daily-english-word-api",
-  "license": "MIT",
-  "language": "Python",
-  "framework": "Flask",
-  "independent": true,
-  "public": true,
-  "homepage": "https://github.com/yiyuanqian111666/daily-english-word-api",
+"project_name": "daily-english-word-api",
+"description": "一个基于 Flask 的开源级游戏化地道美语、俚语与语法学习 API，支持多难度关卡（Easy 至 Hell）、语法解析、挑战评分、连击机制与分页排行榜功能，适合英语学习者、游戏开发者与 Python 练手。",
+"owner": "yiyuanqian111666",
+"repo": "daily-english-word-api",
+"license": "MIT",
+"language": "Python",
+"framework": "Flask",
+"independent": true,
+"public": true,
+"homepage": "https://github.com/yiyuanqian111666/daily-english-word-api",
 
-  "keywords": [
-    "MTL",
-    "open-source",
-    "english-learning",
-    "vocabulary",
-    "flask-api",
-    "education",
-    "daily word",
-    "json api",
-    "sqlite",
-    "backend",
-    "learning-app",
-    "gamification"
-  ],
+"keywords": [
+"MTL",
+"open-source",
+"english-learning",
+"vocabulary",
+"flask-api",
+"education",
+"american-slang",
+"json api",
+"sqlite",
+"backend",
+"learning-app",
+"gamification",
+"multi-difficulty"
+],
 
-  "topics": [
-    "英语学习",
-    "RESTful API",
-    "Python 开发者",
-    "教育工具",
-    "Flask 项目",
-    "后端开发",
-    "单词记忆系统"
-  ],
+"topics": [
+"英语学习",
+"美式俚语",
+"RESTful API",
+"Python 开发者",
+"教育工具",
+"Flask 项目",
+"后端开发",
+"单词与语法记忆系统"
+],
 
-  "features": [
-    "随机单词与场景对话学习",
-    "分类过滤与关键词模糊检索",
-    "自动初始化内置词库（seed words）",
-    "挑战模式（限时打字与校验）",
-    "多级评分系统（SS 至 F）",
-    "连击（streak）机制",
-    "支持分页的高效排行榜系统",
-    "RESTful API 设计与健全的生命周期管理",
-    "SQLite 轻量数据存储"
-  ],
+"features": [
+"500+ 高质量地道美语、美剧俚语与高级长难句词库",
+"四重游戏化难度关卡（Easy, Normal, Hard, Hell）",
+"语法解析（grammar_note）与示例展示",
+"自动初始化内置海量词库",
+"挑战模式（限时拼写打字与智能校验）",
+"多级评分系统（SS 至 F）与连击（streak）机制",
+"支持分页的高效排行榜系统",
+"RESTful API 设计与 Flask 上下文生命周期管理",
+"SQLite 轻量高性能数据存储"
+],
 
-  "educational": true,
-  "mtl_compliant": true,
+"educational": true,
+"mtl_compliant": true,
 
-  "contact": {
-    "author": "yiyuanqian111666",
-    "email": "yiyuanqian666@outlook.com"
-  },
+"contact": {
+"author": "yiyuanqian111666",
+"email": "yiyuanqian666@outlook.com"
+},
 
-  "version": "2.0.0",
-  "created_at": "2025-07-15",
-  "updated_at": "2026-03-19"
+"version": "4.0.0",
+"created_at": "2025-07-15",
+"updated_at": "2026-10-01"
 }
