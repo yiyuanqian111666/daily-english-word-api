@@ -19,6 +19,7 @@ echo ✅ Python 环境正常。
 :: 2. 安装依赖
 if exist requirements.txt (
     echo 📦 正在检查并安装依赖...
+    python -m pip install --upgrade pip >nul 2>&1
     pip install -r requirements.txt
 ) else (
     echo ⚠️ 提示: 未找到 requirements.txt 文件，跳过依赖安装。

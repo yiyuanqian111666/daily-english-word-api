@@ -49,7 +49,6 @@ pip install -r requirements.txt
 
 # 启动服务 (会自动打开浏览器并初始化数据库)
 python start.py
-
 或者使用一键脚本：
 
 Linux / macOS: ./run.sh
@@ -60,10 +59,13 @@ Windows: 双击 run.bat
 
 🔥 API 使用示例
 🎓 1. 获取学习内容
-HTTP
-GET /api/learn?mode=word&category=general
-GET /api/learn?mode=dialog&scene=daily
+HTTP GET
 
+/api/learn?mode=word&category=general
+
+/api/learn?mode=dialog&scene=daily
+
+JSON
 {
   "mode": "word",
   "word": "serendipity",
@@ -71,15 +73,15 @@ GET /api/learn?mode=dialog&scene=daily
   "example": "Finding this app was pure serendipity.",
   "challenge_after": 3
 }
-
 🔍 2. 搜索单词
-GET /api/words/search?q=apple
+HTTP GET /api/words/search?q=apple
 
 🧠 3. 提交挑战
-HTTP
-POST /api/challenge/submit
+HTTP POST /api/challenge/submit
+
 Content-Type: application/json
 
+JSON
 {
   "mode": "word",
   "content": "apple",
@@ -87,23 +89,24 @@ Content-Type: application/json
   "success": true,
   "streak": 2
 }
+返回示例：
 
-返回示例：{
+JSON
+{
   "success": true,
   "grade": "S",
   "used_time": 4,
   "streak": 3
 }
-
 🏆 4. 查看排行榜（支持分页）
-HTTP
-GET /api/leaderboard?limit=10&offset=0
+HTTP GET /api/leaderboard?limit=10&offset=0
 
 ➕ 5. 添加新数据
-HTTP
-POST /api/add
+HTTP POST /api/add
+
 Content-Type: application/json
 
+JSON
 {
   "word": "innovation",
   "meaning": "创新",

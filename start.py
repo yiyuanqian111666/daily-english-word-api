@@ -1,13 +1,17 @@
+import os
 import webbrowser
 from app import app, init_db
 
 if __name__ == "__main__":
     # 确保在启动前初始化数据库
-    init_db()
-
-    url = "http://127.0.0.1:5000"
-    print(f"🚀 API 已启动！请访问 {url} 查看首页状态～")
-    webbrowser.open(url)
+    # WERKZEUG_RUN_MAIN 用于判断是否是 Flask debug 模式下的重载子进程，
+    # 这样可以防止 debug 模式下初始化和打开浏览器执行两次。
+    if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+        init_db()
+        url = "http://127.0.0.1:5000"
+        print(f"🚀 API 已启动！请访问 {url} 查看首页状态～")
+        webbrowser.open(url)
 
     # 启动 Flask 自带的开发服务器
+    # 如果你在多线程下测试或频繁修改代码，debug=True 能帮大忙
     app.run(host="127.0.0.1", port=5000, debug=True)

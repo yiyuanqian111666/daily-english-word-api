@@ -1,16 +1,26 @@
 import json
 import unittest
-from app import app, init_db
+from app import app, init_db, db  # 假设你的 db 对象也能在这里导入以方便清理数据
 
 
 class TestFlaskAPI(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # 初始化数据库与应用上下文
+        """所有测试运行前执行一次：初始化应用与数据库"""
+        app.config["TESTING"] = True
+        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"  # 如果支持，推荐测试时使用内存数据库
         init_db()
-        app.testing = True
-        cls.client = app.test_client()
+
+    def setUp(self):
+        """每个测试用例运行前执行：创建客户端和上下文"""
+        self.app_context = app.app_context()
+        self.app_context.push()
+        self.client = app.test_client()
+
+    def tearDown(self):
+        """每个测试用例运行后执行：清理上下文"""
+        self.app_context.pop()
 
     # ==================== 🏠 首页 ====================
     def test_home(self):
@@ -95,7 +105,7 @@ class TestFlaskAPI(unittest.TestCase):
         self.assertIsInstance(data, list)
         self.assertLessEqual(len(data), 5)
 
-    # ==================== 🔍 单词检索接口（新增） ====================
+    # ==================== 🔍 单词检索接口 ====================
     def test_search_words(self):
         # 先添加一个特定单词
         self.client.post(
@@ -115,7 +125,7 @@ class TestFlaskAPI(unittest.TestCase):
 
         data = response.get_json()
         self.assertIsInstance(data, list)
-        self.assertTrue(any(item["word"] == "telescope" for item in data))
+        self.assertTrue(any(item.get("word") == "telescope" for item in data))
 
     # ==================== ➕ 添加数据 ====================
     def test_add_word(self):
