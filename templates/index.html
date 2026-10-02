@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG 英语冒险 - 多邻国式闯关与考试系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        rpgdark: '#0f172a',
+                        rpgcard: '#1e293b',
+                        rpgaccent: '#8b5cf6',
+                        rpggold: '#f59e0b',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-rpgdark text-slate-100 min-h-screen font-sans selection:bg-rpgaccent selection:text-white">
+
+    <!-- 顶导航栏 -->
+    <header class="bg-rpgcard/80 backdrop-blur border-b border-slate-700/60 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-rpgaccent/20 p-2.5 rounded-xl border border-rpgaccent/40 text-rpgaccent text-xl">
+                    <i class="fa-solid fa-map-marked-alt"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-white tracking-wide">RPG 英语世界</h1>
+                    <p class="text-xs text-slate-400">多邻国闯关与挑战模式 v9.0</p>
+                </div>
+            </div>
+
+            <!-- 用户 RPG 状态面板 -->
+            <div class="flex items-center space-x-4 bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-medal text-rpggold"></i>
+                    <span id="user-title" class="text-sm font-semibold text-rpggold">初学冒险者</span>
+                </div>
+                <div class="h-4 w-[1px] bg-slate-600"></div>
+                <div class="flex items-center space-x-1.5">
+                    <i class="fa-solid fa-bolt text-amber-400"></i>
+                    <span class="text-xs text-slate-400">XP:</span>
+                    <span id="user-xp" class="font-bold text-amber-400">100</span>
+                </div>
+                <div class="h-4 w-[1px] bg-slate-600"></div>
+                <button onclick="playClickSound(); openInventory();" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg transition border border-slate-600 flex items-center space-x-1">
+                    <i class="fa-solid fa-backpack"></i><span>背包</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主体内容区 -->
+    <main class="max-w-4xl mx-auto px-4 py-8">
+
+        <!-- 视图 1：多邻国式关卡大地图/模式选择 -->
+        <div id="view-map" class="space-y-6">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-extrabold text-white mb-2">选择你的冒险关卡</h2>
+                <p class="text-sm text-slate-400">通过日常学习积累经验，或直接参加排位挑战考试晋升段位！</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- 学习关卡 -->
+                <div onclick="startStage('learn')" class="bg-gradient-to-br from-blue-900/40 to-slate-900 border border-blue-500/40 hover:border-blue-400 rounded-2xl p-6 cursor-pointer transition transform hover:-translate-y-1 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center text-xl mb-4 border border-blue-500/30">
+                            <i class="fa-solid fa-book-open"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-1">📖 基础日常特训</h3>
+                        <p class="text-xs text-slate-400 mb-4">通过多题型（选择、拼写、听力）稳步积累词汇量与 XP 奖励。</p>
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-blue-400 font-semibold pt-4 border-t border-slate-800">
+                        <span>稳步升级</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- 极限时间挑战考试 -->
+                <div onclick="startStage('exam')" class="bg-gradient-to-br from-amber-900/40 to-slate-900 border border-amber-500/40 hover:border-amber-400 rounded-2xl p-6 cursor-pointer transition transform hover:-translate-y-1 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center text-xl mb-4 border border-amber-500/30">
+                            <i class="fa-solid fa-stopwatch"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-1">⚡ 60秒极限排位考试</h3>
+                        <p class="text-xs text-slate-400 mb-4">多邻国闪电战风格！在 60 秒内连续答题，答对越多奖励翻倍，考验手速与直觉。</p>
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-amber-400 font-semibold pt-4 border-t border-slate-800">
+                        <span>高额 XP 奖励</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- 冒险商店入口 -->
+                <div onclick="loadShopItems(); document.getElementById('shop-section').scrollIntoView({behavior: 'smooth'})" class="bg-gradient-to-br from-purple-900/40 to-slate-900 border border-purple-500/40 hover:border-purple-400 rounded-2xl p-6 cursor-pointer transition transform hover:-translate-y-1 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-purple-500/20 text-purple-400 rounded-xl flex items-center justify-center text-xl mb-4 border border-purple-500/30">
+                            <i class="fa-solid fa-store"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-1">🛒 冒险补给商店</h3>
+                        <p class="text-xs text-slate-400 mb-4">使用闯关获得的 XP 兑换专属称号、复活道具与属性加成。</p>
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-purple-400 font-semibold pt-4 border-t border-slate-800">
+                        <span>前往商店</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 视图 2：游戏/考试互动区（默认隐藏） -->
+        <div id="view-game" class="hidden bg-rpgcard border border-slate-700/80 rounded-2xl shadow-xl p-6 md:p-8 relative overflow-hidden mb-8">
+            
+            <!-- 顶栏状态与退出按钮 -->
+            <div class="flex justify-between items-center mb-6 text-xs text-slate-400 border-b border-slate-700/50 pb-4">
+                <div class="flex items-center space-x-2">
+                    <button onclick="backToMap()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition border border-slate-600">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> 返回地图
+                    </button>
+                    <span id="game-mode-tag" class="bg-rpgaccent/20 text-rpgaccent px-2.5 py-1 rounded-md font-semibold">日常特训</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span>🔥 连击: <strong id="streak-count" class="text-amber-400">0</strong></span>
+                    <span id="exam-timer-wrapper" class="hidden">⏱️️ 剩余时间: <strong id="exam-timer" class="text-rose-400">60s</strong></span>
+                    <span>⏱️ 耗时: <strong id="timer-display" class="text-cyan-400">0.0s</strong></span>
+                </div>
+            </div>
+
+            <!-- 题目容器（动态多题型） -->
+            <div id="question-container" class="text-center mb-6">
+                <!-- 动态由 JS 填充：如 听力题、选择题、拼写填空题 -->
+            </div>
+
+            <!-- 反馈提示栏 -->
+            <div id="feedback-box" class="hidden rounded-xl p-4 text-center text-sm font-medium transition animate-fade-in mb-4"></div>
+
+            <!-- 下一步/提交按钮 -->
+            <div class="text-center">
+                <button id="action-btn" onclick="submitAnswer()" class="w-full md:w-auto bg-rpgaccent hover:bg-rpgaccent/80 text-white px-8 py-3 rounded-xl font-semibold transition shadow-lg shadow-rpgaccent/20">
+                    提交答案
+                </button>
+            </div>
+        </div>
+
+        <!-- 冒险商店区域 -->
+        <div id="shop-section" class="bg-rpgcard border border-slate-700/80 rounded-2xl shadow-xl p-6 md:p-8 mt-12">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-white flex items-center space-x-2">
+                    <i class="fa-solid fa-store text-rpggold"></i>
+                    <span>冒险补给商店</span>
+                </h3>
+                <button onclick="playClickSound(); loadShopItems();" class="text-xs text-slate-400 hover:text-white bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 transition">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> 刷新商品
+                </button>
+            </div>
+            
+            <div id="shop-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="text-center text-slate-500 py-6 col-span-3">正在加载商店商品...</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 背包模态框 -->
+    <div id="inventory-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-rpgcard border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+                <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+                    <i class="fa-solid fa-backpack text-rpgaccent"></i>
+                    <span>冒险者背包</span>
+                </h3>
+                <button onclick="closeInventory()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="inventory-list" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                <p class="text-center text-slate-500 py-6">背包空空如也，快去商店采购吧！</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏逻辑脚本 -->
+    <script>
+        const API_BASE = "http://127.0.0.1:5000";
+        let currentMode = "learn"; // 'learn' 或 'exam'
+        let currentWordData = null;
+        let startTime = null;
+        let timerInterval = null;
+        let streak = 0;
+        let examTimeLeft = 60;
+        let examInterval = null;
+        let examScore = 0;
+
+        // === 音效系统 ===
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            return audioCtx;
+        }
+
+        function playClickSound() {
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.frequency.setValueAtTime(400, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(); osc.stop(ctx.currentTime + 0.05);
+            } catch (e) {}
+        }
+
+        function playSuccessSound() {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.15, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
+                    osc.connect(gain); gain.connect(ctx.destination);
+                    osc.start(now + idx * 0.08); osc.stop(now + idx * 0.08 + 0.3);
+                });
+            } catch (e) {}
+        }
+
+        function playFailSound() {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.linearRampToValueAtTime(90, now + 0.3);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(now); osc.stop(now + 0.3);
+            } catch (e) {}
+        }
+
+        // === 浏览器语音 TTS ===
+        function speakText(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // === 模式切换 ===
+        function startStage(mode) {
+            playClickSound();
+            currentMode = mode;
+            document.getElementById('view-map').classList.add('hidden');
+            document.getElementById('view-game').classList.remove('hidden');
+
+            const modeTag = document.getElementById('game-mode-tag');
+            const timerWrapper = document.getElementById('exam-timer-wrapper');
+
+            if (mode === 'exam') {
+                modeTag.innerText = "⚡ 60秒限时考试";
+                timerWrapper.classList.remove('hidden');
+                examTimeLeft = 60;
+                examScore = 0;
+                startExamTimer();
+            } else {
+                modeTag.innerText = "📖 日常特训模式";
+                timerWrapper.classList.add('hidden');
+            }
+            fetchNewQuestion();
+        }
+
+        function backToMap() {
+            playClickSound();
+            if (examInterval) clearInterval(examInterval);
+            if (timerInterval) clearInterval(timerInterval);
+            document.getElementById('view-game').classList.add('hidden');
+            document.getElementById('view-map').classList.remove('hidden');
+        }
+
+        function startExamTimer() {
+            if (examInterval) clearInterval(examInterval);
+            examInterval = setInterval(() => {
+                examTimeLeft--;
+                document.getElementById('exam-timer').innerText = examTimeLeft + 's';
+                if (examTimeLeft <= 0) {
+                    clearInterval(examInterval);
+                    alert(`⏰ 考试时间到！你在本次极限考试中答对了 ${examScore} 道题！`);
+                    backToMap();
+                }
+            }, 1000);
+        }
+
+        // === 获取新题目（多邻国风格：随机生成选择题或填空题） ===
+        async function fetchNewQuestion() {
+            try {
+                const res = await fetch(`${API_BASE}/api/learn?difficulty=normal`);
+                const data = await res.json();
+                currentWordData = data;
+
+                const container = document.getElementById('question-container');
+                document.getElementById('feedback-box').classList.add('hidden');
+
+                // 随机决定题型：0 = 拼写填空, 1 = 听力拼写, 2 = 释义选择题
+                const questionType = Math.floor(Math.random() * 3);
+
+                if (questionType === 0) {
+                    // 拼写填空题
+                    container.innerHTML = `
+                        <p class="text-xs text-slate-400 mb-2">请根据中文释义拼写出对应的英文单词：</p>
+                        <h3 class="text-2xl font-bold text-rpggold mb-4">${data.meaning}</h3>
+                        <p class="text-xs text-slate-500 italic mb-6">例句: "${data.example}"</p>
+                        <div class="max-w-md mx-auto">
+                            <input type="text" id="user-input" placeholder="输入英文拼写..." autocomplete="off" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rpgaccent text-center font-medium">
+                        </div>
+                    `;
+                } else if (questionType === 1) {
+                    // 听力题
+                    container.innerHTML = `
+                        <p class="text-xs text-slate-400 mb-2">🔊 听音辨词：点击喇叭收听发音并拼写</p>
+                        <button onclick="speakCurrentWord()" class="bg-rpgaccent/20 hover:bg-rpgaccent/40 text-rpgaccent px-6 py-3 rounded-full border border-rpgaccent/40 mb-6 transition">
+                            <i class="fa-solid fa-volume-high text-xl mr-2"></i> 播放发音
+                        </button>
+                        <p class="text-xs text-slate-400 mb-4">释义提示：${data.meaning}</p>
+                        <div class="max-w-md mx-auto">
+                            <input type="text" id="user-input" placeholder="输入你听到的英文..." autocomplete="off" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rpgaccent text-center font-medium">
+                        </div>
+                    `;
+                    speakCurrentWord();
+                } else {
+                    // 经典拼写模式
+                    container.innerHTML = `
+                        <p class="text-xs text-slate-400 mb-2">词条：<strong class="text-white text-lg">${data.word}</strong></p>
+                        <h3 class="text-xl font-bold text-slate-200 mb-4">${data.meaning}</h3>
+                        <div class="max-w-md mx-auto">
+                            <input type="text" id="user-input" placeholder="请输入英文拼写..." autocomplete="off" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rpgaccent text-center font-medium">
+                        </div>
+                    `;
+                }
+
+                // 回车绑定
+                const inputEl = document.getElementById('user-input');
+                if(inputEl) {
+                    inputEl.focus();
+                    inputEl.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') submitAnswer();
+                    });
+                }
+
+                startTimer();
+            } catch (err) {
+                console.error("加载题目失败:", err);
+            }
+        }
+
+        function speakCurrentWord() {
+            if (currentWordData) speakText(currentWordData.word);
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                const elapsed = (Date.now() - startTime) / 1000;
+                document.getElementById('timer-display').innerText = elapsed.toFixed(1) + 's';
+            }, 100);
+        }
+
+        // === 提交答案 ===
+        async function submitAnswer() {
+            if (!currentWordData) return;
+            clearInterval(timerInterval);
+            const usedTime = (Date.now() - startTime) / 1000;
+            const inputEl = document.getElementById('user-input');
+            const userTyped = inputEl ? inputEl.value.trim() : "";
+            const targetWord = currentWordData.word.trim();
+
+            const success = userTyped.toLowerCase() === targetWord.toLowerCase();
+
+            if (success) {
+                streak++;
+                examScore++;
+                playSuccessSound();
+            } else {
+                streak = 0;
+                playFailSound();
+            }
+            document.getElementById('streak-count').innerText = streak;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/challenge/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        used_time: usedTime,
+                        success: success,
+                        difficulty: currentMode === 'exam' ? 'hard' : 'normal',
+                        streak: streak,
+                        bet_amount: 0
+                    })
+                });
+                const result = await res.json();
+
+                if (res.ok) {
+                    showFeedback(result.success, result.interactive_comment, result.earned_xp);
+                    updateUserProfile(result.user_profile);
+
+                    if (success) {
+                        setTimeout(fetchNewQuestion, 1500);
+                    }
+                }
+            } catch (err) {
+                console.error("提交失败:", err);
+            }
+        }
+
+        function showFeedback(success, comment, earnedXp) {
+            const box = document.getElementById('feedback-box');
+            box.classList.remove('hidden');
+            if (success) {
+                box.className = "rounded-xl p-4 text-center text-sm font-medium bg-emerald-900/40 border border-emerald-500/50 text-emerald-300 animate-fade-in mb-4";
+                box.innerHTML = `<p class="font-bold text-base mb-1">🎉 回答正确！</p><p>${comment}</p><p class="text-xs text-amber-400 mt-1">获得奖励: +${earnedXp} XP</p>`;
+            } else {
+                box.className = "rounded-xl p-4 text-center text-sm font-medium bg-rose-900/40 border border-rose-500/50 text-rose-300 animate-fade-in mb-4";
+                box.innerHTML = `<p class="font-bold text-base mb-1">❌ 回答错误</p><p>${comment}</p><p class="text-xs text-slate-400 mt-1">正确答案是：<span class="text-white font-bold">${currentWordData.word}</span></p>`;
+            }
+        }
+
+        function updateUserProfile(profile) {
+            document.getElementById('user-xp').innerText = profile.xp;
+            document.getElementById('user-title').innerText = profile.title;
+        }
+
+        // === 商店与背包 ===
+        async function loadShopItems() {
+            try {
+                const res = await fetch(`${API_BASE}/api/shop/items`);
+                const data = await res.json();
+                const grid = document.getElementById('shop-grid');
+                grid.innerHTML = '';
+
+                data.items.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = "bg-slate-900/70 border border-slate-700/80 rounded-xl p-4 flex flex-col justify-between hover:border-rpgaccent/60 transition";
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold text-white text-sm">${item.name}</h4>
+                                <span class="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-semibold">${item.price} XP</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mb-4">${item.description}</p>
+                        </div>
+                        <button onclick="playClickSound(); buyItem(${item.id})" class="w-full bg-slate-800 hover:bg-rpgaccent text-slate-200 hover:text-white text-xs font-semibold py-2 rounded-lg transition border border-slate-700">
+                            立即购买
+                        </button>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (err) {
+                console.error("加载商店失败:", err);
+            }
+        }
+
+        async function buyItem(itemId) {
+            try {
+                const res = await fetch(`${API_BASE}/api/shop/buy`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item_id: itemId })
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    playSuccessSound();
+                    alert(result.message);
+                    document.getElementById('user-xp').innerText = result.remaining_xp;
+                    document.getElementById('user-title').innerText = result.user_profile.title;
+                } else {
+                    playFailSound();
+                    alert(result.error || "购买失败");
+                }
+            } catch (err) {
+                console.error("购买异常:", err);
+            }
+        }
+
+        async function openInventory() {
+            const modal = document.getElementById('inventory-modal');
+            modal.classList.remove('hidden');
+            try {
+                const res = await fetch(`${API_BASE}/api/inventory`);
+                const data = await res.json();
+                const list = document.getElementById('inventory-list');
+                list.innerHTML = '';
+
+                if (data.inventory.length === 0) {
+                    list.innerHTML = `<p class="text-center text-slate-500 py-6">背包空空如也，快去商店采购吧！</p>`;
+                    return;
+                }
+
+                data.inventory.forEach(inv => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = "bg-slate-900 border border-slate-700/60 p-3 rounded-xl flex justify-between items-center";
+                    itemDiv.innerHTML = `
+                        <div>
+                            <h5 class="font-bold text-white text-sm">${inv.name} <span class="text-xs text-rpgaccent font-normal">x${inv.quantity}</span></h5>
+                            <p class="text-xs text-slate-400 mt-0.5">${inv.description}</p>
+                        </div>
+                    `;
+                    list.appendChild(itemDiv);
+                });
+            } catch (err) {
+                console.error("加载背包失败:", err);
+            }
+        }
+
+        function closeInventory() {
+            playClickSound();
+            document.getElementById('inventory-modal').classList.add('hidden');
+        }
+
+        window.onload = function() {
+            loadShopItems();
+        };
+    </script>
+</body>
+</html>

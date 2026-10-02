@@ -1,327 +1,533 @@
-from datetime import datetime
+"""
+======================================================================
+项目名称：RPG 英语冒险与商店系统 (后端终极扩展版 v8.0)
+当前文件：app.py
+主要功能：
+  1. SQLite 数据库自动初始化与多表联动
+  2. 海量多维度（日常、职场、学术、俚语、哲学长难句）分级词库
+  3. 精确筛选接口 (/api/learn) 及随机抽取不同词条
+  4. 多阶段拼写校验与挑战提交、响应时间与连击统计、防作弊校验 (/api/challenge/submit)
+  5. 冒险商店丰富商品拉取与道具购买扣款、背包归档 (/api/shop/items, /api/shop/buy, /api/inventory)
+  6. 用户 RPG 动态称号成长机制 (XP 驱动，各难度独立 XP 奖励)
+======================================================================
+"""
+
+import os
 import random
 import sqlite3
-from flask import Flask, g, jsonify, request
+import logging
+from flask import Flask, g, jsonify, render_template, request
+from flask_cors import CORS
+
+# 配置日志记录
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 
 app = Flask(__name__)
+CORS(app)  # 启用跨域支持，确保前后端联调通畅
 
-DB_NAME = "words.db"
-CHALLENGE_LIMIT = 20
-CHALLENGE_TRIGGER = 3
+DATABASE = "rpg_english.db"
 
+# ==========================================
+# 1. 数据库连接管理与生命周期挂钩
+# ==========================================
 
-# ==================== 📦 数据库连接管理 ====================
 def get_db():
-    """使用 Flask 的 g 对象实现请求级别的数据库连接复用"""
-    if "db" not in g:
-        g.db = sqlite3.connect(DB_NAME)
-        g.db.row_factory = sqlite3.Row  # 启用字典/行映射，方便取值
-    return g.db
-
+    """获取当前请求的数据库连接实例"""
+    db = getattr(g, "_database", None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+        db.row_factory = sqlite3.Row  # 启用行工厂，支持通过列名访问数据
+    return db
 
 @app.teardown_appcontext
-def close_db(exception):
-    """请求结束时自动关闭数据库连接"""
-    db = g.pop("db", None)
+def close_connection(exception):
+    """请求结束后自动关闭数据库连接"""
+    db = getattr(g, "_database", None)
     if db is not None:
         db.close()
 
 
+# ==========================================
+# 2. 数据库初始化与海量种子数据植入
+# ==========================================
+
 def init_db():
-    """初始化数据库表及 500+ 开源级地道美语与语法闯关数据集"""
+    """初始化数据库表结构并填充初始测试数据"""
     with app.app_context():
         db = get_db()
         cursor = db.cursor()
 
-        # 1. 单词与地道表达表（增加 difficulty 难度、category 分类、grammar_note 语法解析）
+        logging.info("正在检查并初始化数据库表结构...")
+
+        # 表一：单词与长句核心库
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS words (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 word TEXT NOT NULL,
-                meaning TEXT,
-                example TEXT,
+                meaning TEXT NOT NULL,
+                example TEXT NOT NULL,
                 level INTEGER DEFAULT 1,
                 difficulty TEXT DEFAULT 'easy',
                 category TEXT DEFAULT 'general',
-                grammar_note TEXT DEFAULT ''
+                grammar_note TEXT,
+                challenge_after INTEGER DEFAULT 1,
+                image_url TEXT
             )
         """
         )
 
-        # 2. 挑战记录表
+        # 表二：挑战历史记录表
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS challenges (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                mode TEXT,
+                word_id INTEGER,
                 difficulty TEXT,
-                content TEXT,
-                used_time INTEGER,
+                used_time REAL,
+                success BOOLEAN,
                 grade TEXT,
-                streak INTEGER,
-                created_at TEXT
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """
         )
 
-        seed_massive_vocabulary(cursor)
-        db.commit()
-
-
-# ==================== 🌱 500+ 工业级/开源级地道美语与语法词库 ====================
-def seed_massive_vocabulary(cursor):
-    cursor.execute("SELECT COUNT(*) FROM words")
-    count = cursor.fetchone()[0]
-
-    if count > 200:  # 如果已经导入过大量数据则跳过
-        return
-
-    # 模拟构建 500+ 规模的精细化、多难度、地道美语、美剧俚语与高级语法长句库
-    massive_data = [
-        # ================= 🟢 Easy 简单难度 (基础生活单词与单句) =================
-        ("apple", "苹果", "I grab an apple on my way to work.", 1, "easy", "daily", "基础名词，日常生活高频。"),
-        ("coffee", "咖啡", "I desperately need a cup of coffee right now.", 1, "easy", "daily", "日常高频词汇。"),
-        ("happy", "开心的", "She was over the moon when she heard the news.", 1, "easy", "emotion", "形容词，表示极度高兴。"),
-        ("friend", "朋友", "He's my ride-or-die friend who always has my back.", 1, "easy", "social", "日常交际必备。"),
-        ("water", "水", "Make sure to drink plenty of water throughout the day.", 1, "easy", "health", "基础名词。"),
-        ("morning", "早晨", "Good morning! Did you sleep well last night?", 1, "easy", "daily", "问候用语。"),
-        ("book", "书本", "Reading a good book before bed helps me relax.", 1, "easy", "study", "基础名词。"),
-        ("phone", "手机", "My phone battery is running low.", 1, "easy", "tech", "现代生活高频。"),
-        ("music", "音乐", "Listening to music puts me in a great mood.", 1, "easy", "art", "基础名词。"),
-        ("food", "食物", "American fast food is quite high in calories.", 1, "easy", "life", "基础名词。"),
-        
-        # (此处省略中间重复结构，实际开源项目中我们会通过循环或大数组铺满 500+ 条，以下为各难度代表性高质硬核数据)
-        
-        # ================= 🟡 Normal 正常难度 (美国人日常高频短语) =================
-        ("hang out", "闲逛/聚会", "What do you say we hang out this weekend?", 2, "normal", "social", "phrasal verb: 休闲聚会。"),
-        ("chill", "放松/冷静", "Just chill out, everything is under control.", 2, "normal", "daily", "美式口语中极常用的放松。"),
-        ("grab a bite", "吃口东西", "I'm starved. Let's grab a bite to eat before the meeting.", 2, "normal", "dining", "地道短语：随便吃点。"),
-        ("catch up", "叙旧/了解近况", "We need to catch up over coffee sometime soon.", 2, "normal", "social", "叙旧、同步信息。"),
-        ("run out of", "用完/耗尽", "We are about to run out of milk, can you buy some?", 2, "normal", "life", "高频动词短语。"),
-        ("figure out", "弄懂/解决", "It took me hours to figure out how this code works.", 2, "normal", "logic", "思考并得出结论。"),
-        ("piss off", "惹恼/使生气", "His attitude really pisses me off sometimes.", 2, "normal", "emotion", "非正式口语，注意语境。"),
-        ("show up", "出现/露面", "He promised to come, but he didn't show up.", 2, "normal", "daily", "出席某个场合。"),
-        ("give up", "放弃", "Never give up on your dreams, no matter how hard it gets.", 2, "normal", "mindset", "常用短语。"),
-        ("look forward to", "期待", "I am really looking forward to the weekend.", 2, "normal", "emotion", "后接动词必须加 -ing。"),
-
-        # ================= 🔴 Hard 困难难度 (地道美式俚语与社交黑话) =================
-        ("spill the tea", "八卦/吐露实情", "Come on, spill the tea! What happened at the party last night?", 3, "hard", "slang", "现代美式流行俚语：爆料、八卦。"),
-        ("cost an arm and a leg", "贵得离谱", "That brand-new smartphone costs an arm and a leg.", 3, "hard", "shopping", "夸张习语：代价极高。"),
-        ("under the weather", "身体不舒服/有点累", "I'm feeling a bit under the weather today, so I'll stay home.", 3, "hard", "health", "委婉表达生病或状态不佳。"),
-        ("hit the sack", "上床睡觉", "I'm exhausted from work. I think I'm gonna hit the sack early.", 3, "hard", "daily", "地道日常习语：睡觉。"),
-        ("piece of cake", "小菜一碟", "Don't worry about the exam, it's going to be a piece of cake.", 3, "hard", "idiom", "形容事情非常简单。"),
-        ("break a leg", "祝你好运", "I know you're nervous about the interview, but you're going to ace it. Break a leg!", 3, "hard", "idiom", "演艺界及面试前的地道祝福语。"),
-        ("call it a day", "收工/今天就到这", "We've been working for 10 hours straight. Let's call it a day.", 3, "hard", "work", "决定停止工作。"),
-        ("bites the dust", "挂掉/失败", "My old laptop finally bit the dust after five years.", 3, "hard", "slang", "东西损坏或人失败。"),
-        ("on cloud nine", "欣喜若狂", "When she accepted his proposal, he was on cloud nine.", 3, "hard", "emotion", "极度高兴的习语。"),
-        ("face the music", "承担后果", "If you made a mistake, you have to stand up and face the music.", 3, "hard", "idiom", "勇敢面对不愉快的后果。"),
-
-        # ================= 💀 Hell 地狱难度 (高阶习语、美剧连读与复杂语法长难句) =================
-        ("bite the bullet", "咬牙坚持/硬着头皮面对", "It's going to be a tough project, but we just have to bite the bullet and finish it.", 4, "hell", "idiom", "高阶习语：被迫做痛苦但不得不做的事。"),
-        ("once in a blue moon", "千载难逢/极其罕见", "My brother lives abroad, so I only get to see him once in a blue moon.", 4, "hell", "idiom", "表示频率极低。"),
-        ("speak of the devil", "说曹操曹操到", "Guess who we were just talking about? Look, speak of the devil!", 4, "hell", "idiom", "正说着某人，某人就出现了。"),
-        ("burn the midnight oil", "熬夜加班/开夜车", "Students often have to burn the midnight oil before final exams.", 4, "hell", "idiom", "形容深夜苦读或工作。"),
-        ("steal someone's thunder", "抢风头", "Announced my engagement first, but she totally stole my thunder.", 4, "hell", "idiom", "抢走别人的光彩或成就。"),
-        ("throw in the towel", "认输/放弃", "The competition was fierce, but they refused to throw in the towel.", 4, "hell", "idiom", "源自拳击比赛扔毛巾认输。"),
-        ("the ball is in your court", "轮到你做决定了", "I've done all I can do; now the ball is in your court.", 4, "hell", "idiom", "责任或决策权转交。"),
-        ("through thick and thin", "同甘共苦/风雨同舟", "True friends will stick with you through thick and thin.", 4, "hell", "idiom", "经历各种艰难险阻。"),
-        ("let the cat out of the bag", "泄露秘密", "Who let the cat out of the bag about the surprise party?", 4, "hell", "idiom", "无意中泄露机密。"),
-        ("take it with a grain of salt", "半信半疑/对...持保留态度", "You should take celebrity gossip with a grain of salt.", 4, "hell", "idiom", "不要完全相信。")
-    ]
-
-    # 为了让词库真正达到工业级丰富度（扩充到数百条基础循环生成或直接写入）
-    # 这里我们通过批量插入，并可以通过扩展让其支持更庞大的数据
-    cursor.executemany(
+        # 表三：用户 RPG 状态表 (单例模式 id = 1)
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_stats (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                xp INTEGER DEFAULT 100,
+                total_solved INTEGER DEFAULT 0,
+                title TEXT DEFAULT '初学冒险者'
+            )
         """
-        INSERT INTO words (word, meaning, example, level, difficulty, category, grammar_note)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    """,
-        massive_data,
-    )
+        )
+        cursor.execute(
+            """
+            INSERT OR IGNORE INTO user_stats (id, xp, total_solved, title) 
+            VALUES (1, 100, 0, '初学冒险者')
+        """
+        )
+
+        # 表四：商店商品表
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS shop_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                description TEXT NOT NULL,
+                price INTEGER NOT NULL,
+                item_type TEXT NOT NULL,
+                effect_value TEXT
+            )
+        """
+        )
+
+        # 表五：用户背包表
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_inventory (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                item_id INTEGER,
+                quantity INTEGER DEFAULT 1,
+                FOREIGN KEY (item_id) REFERENCES shop_items(id)
+            )
+        """
+        )
+
+        # 初始化丰富实用的冒险商店道具
+        cursor.execute("SELECT COUNT(*) FROM shop_items")
+        if cursor.fetchone()[0] == 0:
+            logging.info("正在植入丰富实用的商店道具...")
+            default_items = [
+                ("双倍经验药水 (1局)", "在接下来的1次挑战成功后，获得的XP直接翻倍！", 60, "buff", "double_xp"),
+                ("错题免死金牌", "挑战失败时抵扣一次扣分与连击中断，保护你的连胜。", 90, "consumable", "save_streak"),
+                ("幸运转运符", "下一次赌徒模式（Gambler）失败时，返还一半下注XP。", 150, "consumable", "gambler_shield"),
+                ("高级提示卷轴", "在拼写挑战中自动点亮关键字母提示，降低通关难度。", 100, "consumable", "auto_hint"),
+                ("稀有称号：【学霸附体】", "购买后立即解锁并可佩戴炫酷的专属高级称号！", 350, "title", "学霸附体"),
+                ("史诗称号：【英语大宗师】", "彰显尊贵身份，将冒险者称号晋升为大宗师！", 800, "title", "英语大宗师"),
+                ("传说称号：【传说中英灵】", "至高无上的荣誉称号，通往英语世界的巅峰！", 1500, "title", "传说中英灵"),
+            ]
+            cursor.executemany(
+                """
+                INSERT INTO shop_items (name, description, price, item_type, effect_value)
+                VALUES (?, ?, ?, ?, ?)
+            """,
+                default_items,
+            )
+            db.commit()
+
+        # 初始化海量分级词库与长难句数据
+        cursor.execute("SELECT COUNT(*) FROM words")
+        if cursor.fetchone()[0] == 0:
+            logging.info("正在植入海量、多难度的英语词汇与长难句种子数据...")
+            seed_data = [
+                # ----------------- 简单 (Easy) 基础日常/水果 -----------------
+                ("apple", "苹果", "An apple a day keeps the doctor away.", 1, "easy", "fruit", "基础名词。可数名词单数形式。", 1, "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=600"),
+                ("banana", "香蕉", "Monkeys love eating fresh bananas in the jungle.", 1, "easy", "fruit", "常见水果名词。", 1, "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=600"),
+                ("orange", "橙子", "She drinks a glass of fresh orange juice every morning.", 1, "easy", "fruit", "水果与颜色双义词。", 1, "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=600"),
+                ("curious", "好奇的", "Children are naturally curious about the world.", 1, "easy", "adjective", "常用形容词，常与 about 连用。", 1, "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600"),
+                ("achieve", "实现/达成", "Work hard and you will achieve your dreams.", 2, "easy", "verb", "核心动词，意为通过努力达成目标。", 1, "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600"),
+                ("breeze", "微风/轻而易举", "The English test was an absolute breeze.", 2, "easy", "noun", "常见生活名词与比喻表达。", 1, "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600"),
+                ("journey", "旅程/历程", "Life is a journey, not a destination.", 2, "easy", "noun", "励志高频词汇。", 1, "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600"),
+
+                # ----------------- 进阶 (Normal) 职场与短语 -----------------
+                ("hang out", "闲逛/聚会", "We like to hang out at the café on weekends.", 2, "normal", "phrasal_verb", "生活高频动词短语。", 2, "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600"),
+                ("figure out", "弄清楚/想明白", "I need some time to figure out this problem.", 3, "normal", "phrasal_verb", "思考并彻底解决某事。", 2, "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600"),
+                ("pragmatic", "务实的", "We need a pragmatic approach to solve this crisis.", 3, "normal", "business", "职场高频词，强调注重实际效果。", 2, "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600"),
+                ("momentum", "势头/动量", "The project gained strong momentum after the new launch.", 3, "normal", "business", "描述发展速度与发展势头的商业词汇。", 2, "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=600"),
+                ("resilience", "恢复力/坚韧", "Her resilience helped her overcome major setbacks.", 3, "normal", "psychology", "心理抗压与适应逆境的能力。", 2, "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=600"),
+                ("colleague", "同事/同僚", "She gets along very well with all her colleagues.", 3, "normal", "business", "职场日常高频词汇。", 2, "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600"),
+
+                # ----------------- 困难 (Hard) 俚语与学术 -----------------
+                ("spill the tea", "八卦/吐露实情", "Come on, spill the tea! What happened last night?", 3, "hard", "slang", "现代美式流行俚语，意为爆料。", 3, "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=600"),
+                ("bite the bullet", "咬牙坚持", "We have no choice but to bite the bullet.", 4, "hard", "idiom", "经典习惯用语，面对艰难困境咬牙挺过去。", 3, "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=600"),
+                ("ubiquitous", "无处不在的", "Smartphones have become ubiquitous in daily life.", 4, "hard", "academic", "高级学术形容词，指 omnipresent。", 3, "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600"),
+                ("paradigm shift", "范式转移/思维大变革", "AI represents a major paradigm shift in technology.", 4, "hard", "business", "商业和科技核心概念，指根本性的模式改变。", 3, "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600"),
+                ("meticulous", "一丝不苟的/细致的", "The scientist kept meticulous records of every experiment.", 4, "hard", "academic", "形容对细节极度关注与严谨。", 3, "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600"),
+
+                # ----------------- 地狱 (Hell) 谚语与哲学长难句 -----------------
+                ("Actions speak louder than words.", "事实胜于雄辩", "Don't just make promises; remember that actions speak louder.", 4, "hell", "proverb", "经典英语谚语，强调行动重于承诺。", 4, "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600"),
+                ("It is the mark of an educated mind to be able to entertain a thought without accepting it.", "能容纳一种观念而不急于认同，才是一个受过教育的头脑的标志.", "Aristotle wisely noted that true intellect involves suspending immediate judgment.", 5, "hell", "philosophy", "亚里士多德名言，考察复杂从句理解能力。", 4, "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=600"),
+                ("He who has a why to live can bear almost any how.", "知其所为何以生，便能承受世间任何生存方式.", "Nietzsche's profound insight highlights the power of inner purpose.", 5, "hell", "philosophy", "尼采名言长难句挑战，探讨人生意义。", 4, "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600"),
+                ("In the middle of difficulty lies opportunity.", "困难之中蕴藏着机遇.", "Einstein reminded us to look past obstacles toward potential breakthroughs.", 5, "hell", "philosophy", "爱因斯坦深刻智慧箴言。", 4, "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=600")
+            ]
+            cursor.executemany(
+                """
+                INSERT INTO words (word, meaning, example, level, difficulty, category, grammar_note, challenge_after, image_url)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+                seed_data,
+            )
+            db.commit()
+        
+        logging.info("数据库初始化完成！")
 
 
-# ==================== 🎯 评分系统 ====================
-def calculate_grade(used_time, success, streak):
-    if not success or used_time > CHALLENGE_LIMIT:
-        return "F", 0
+# ==========================================
+# 3. 辅助计算函数
+# ==========================================
 
-    rules = [
-        (3, "SS"),
-        (5, "S"),
-        (8, "A"),
-        (11, "B"),
-        (14, "C"),
-        (17, "D"),
-    ]
-
-    for t, g in rules:
-        if used_time <= t:
-            return g, streak + 1 if g in ["SS", "S", "A", "B"] else 0
-
-    return "E", 0
+def calculate_title(xp):
+    """根据当前用户的 XP 动态计算冒险者称号"""
+    if xp >= 1500:
+        return "传说中英灵"
+    elif xp >= 800:
+        return "英语大宗师"
+    elif xp >= 350:
+        return "地道美语精锐"
+    elif xp >= 100:
+        return "语言学徒"
+    return "初学冒险者"
 
 
-# ==================== 🏠 首页 ====================
+# ==========================================
+# 4. 核心路由与 API 接口定义
+# ==========================================
+
 @app.route("/")
 def home():
-    return jsonify(
-        {
-            "message": "🎮 Open-Source RPG English Learning API (v4.0)",
-            "version": "4.0",
-            "difficulties": ["easy", "normal", "hard", "hell"],
-            "features": [
-                "Massive 500+ level vocabulary & idioms database",
-                "Four distinct game difficulties (Easy to Hell)",
-                "Timed spelling challenge & grade scoring (SS to F)",
-                "Built-in Web Speech Synthesis support"
-            ],
-        }
-    )
+    """渲染前端主页面"""
+    return render_template("index.html")
 
 
-# ==================== 📘 学习接口（按难度与关卡获取） ====================
 @app.route("/api/learn", methods=["GET"])
 def learn():
-    difficulty = request.args.get("difficulty", "easy")  # easy, normal, hard, hell
+    """
+    获取学习词条接口（根据难度随机获取不同单词或句子）
+    参数支持：
+      - difficulty: easy, normal, hard, hell, gambler
+      - category: fruit, business, philosophy 等可选分类过滤
+    """
+    difficulty = request.args.get("difficulty", "easy")
     category = request.args.get("category")
 
     db = get_db()
     cursor = db.cursor()
 
-    query = "SELECT id, word, meaning, example, level, difficulty, category, grammar_note FROM words WHERE difficulty = ?"
-    params = [difficulty]
+    # 构建查询逻辑
+    if difficulty == "gambler":
+        cursor.execute("SELECT * FROM words WHERE difficulty IN ('hard', 'hell')")
+    else:
+        query = "SELECT * FROM words WHERE difficulty = ?"
+        params = [difficulty]
+        if category:
+            query += " AND category = ?"
+            params.append(category)
+        cursor.execute(query, params)
 
-    if category:
-        query += " AND category = ?"
-        params.append(category)
+    words = cursor.fetchall()
+    
+    # 若在特定分类下没有找到单词，则降级按当前难度全库查询
+    if not words:
+        cursor.execute("SELECT * FROM words WHERE difficulty = ?", (difficulty,))
+        words = cursor.fetchall()
+        
+    # 如果该难度依然为空，则降级查询全库
+    if not words:
+        cursor.execute("SELECT * FROM words")
+        words = cursor.fetchall()
 
-    query += " ORDER BY RANDOM() LIMIT 1"
-    cursor.execute(query, params)
-    row = cursor.fetchone()
+    word = random.choice(words)
 
-    if not row:
-        return jsonify({"error": f"No expressions found for difficulty: {difficulty}"}), 404
+    # 获取当前用户状态
+    cursor.execute("SELECT xp, total_solved, title FROM user_stats WHERE id = 1")
+    stats = cursor.fetchone()
+
+    logging.info(f"派发词条 ID: {word['id']}, 内容: {word['word']}, 当前难度: {difficulty}")
 
     return jsonify(
         {
-            "id": row["id"],
-            "word": row["word"],
-            "meaning": row["meaning"],
-            "example": row["example"],
-            "level": row["level"],
-            "difficulty": row["difficulty"],
-            "category": row["category"],
-            "grammar_note": row["grammar_note"],
-            "challenge_after": CHALLENGE_TRIGGER,
+            "id": word["id"],
+            "word": word["word"],
+            "meaning": word["meaning"],
+            "example": word["example"],
+            "level": word["level"],
+            "difficulty": word["difficulty"],
+            "category": word["category"],
+            "grammar_note": word["grammar_note"],
+            "challenge_after": word["challenge_after"],
+            "image_url": word["image_url"],
+            "user_status": {
+                "xp": stats["xp"],
+                "total_solved": stats["total_solved"],
+                "title": stats["title"],
+            },
         }
     )
 
 
-# ==================== 🧠 提交挑战 ====================
+@app.route("/api/shop/items", methods=["GET"])
+def get_shop_items():
+    """获取冒险商店的所有可用商品及当前用户的 XP 余额"""
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM shop_items")
+    items = [dict(row) for row in cursor.fetchall()]
+
+    cursor.execute("SELECT xp FROM user_stats WHERE id = 1")
+    user_xp = cursor.fetchone()["xp"]
+
+    return jsonify({"items": items, "user_xp": user_xp})
+
+
+@app.route("/api/shop/buy", methods=["POST"])
+def buy_item():
+    """商店购买道具接口"""
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "缺少请求负载"}), 400
+
+    item_id = data.get("item_id")
+    if not item_id:
+        return jsonify({"error": "缺少商品ID"}), 400
+
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("SELECT * FROM shop_items WHERE id = ?", (item_id,))
+    item = cursor.fetchone()
+    if not item:
+        return jsonify({"error": "该商品不存在"}), 404
+
+    cursor.execute("SELECT xp, title FROM user_stats WHERE id = 1")
+    stats = cursor.fetchone()
+    current_xp = stats["xp"]
+    price = item["price"]
+
+    if current_xp < price:
+        return jsonify({"error": "您的 XP 不足，无法购买此道具！快去多通关赚取奖励吧~"}), 400
+
+    new_xp = current_xp - price
+    cursor.execute("UPDATE user_stats SET xp = ? WHERE id = 1", (new_xp,))
+
+    # 如果购买的是称号道具，直接更新用户的当前称号
+    if item["item_type"] == "title":
+        new_title = item["effect_value"]
+        cursor.execute("UPDATE user_stats SET title = ? WHERE id = 1", (new_title,))
+
+    # 将道具记入用户背包
+    cursor.execute("SELECT id, quantity FROM user_inventory WHERE item_id = ?", (item_id,))
+    inv = cursor.fetchone()
+    if inv:
+        cursor.execute("UPDATE user_inventory SET quantity = quantity + 1 WHERE id = ?", (inv["id"],))
+    else:
+        cursor.execute("INSERT INTO user_inventory (item_id, quantity) VALUES (?, 1)", (item_id,))
+
+    db.commit()
+
+    cursor.execute("SELECT xp, title FROM user_stats WHERE id = 1")
+    updated_stats = cursor.fetchone()
+
+    return jsonify(
+        {
+            "success": True,
+            "message": f"成功购买【{item['name']}】！",
+            "remaining_xp": updated_stats["xp"],
+            "user_profile": {
+                "xp": updated_stats["xp"],
+                "title": updated_stats["title"],
+            },
+        }
+    )
+
+
+@app.route("/api/inventory", methods=["GET"])
+def get_inventory():
+    """获取用户背包中的道具列表"""
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        """
+        SELECT i.id, s.name, s.description, s.item_type, s.effect_value, i.quantity
+        FROM user_inventory i
+        JOIN shop_items s ON i.item_id = s.id
+    """
+    )
+    items = [dict(row) for row in cursor.fetchall()]
+    return jsonify({"inventory": items})
+
+
 @app.route("/api/challenge/submit", methods=["POST"])
 def submit_challenge():
-    data = request.json
+    """
+    核心挑战提交与经验结算接口（各难度采用独立、差异化的 XP 奖励基底）
+    """
+    data = request.get_json()
     if not data:
-        return jsonify({"error": "Missing JSON body"}), 400
+        return jsonify({"error": "缺少请求JSON主体"}), 400
 
-    try:
-        used_time = int(data.get("used_time", CHALLENGE_LIMIT))
-        success = bool(data.get("success", False))
-        difficulty = data.get("difficulty", "easy")
-        content = data.get("content", "")
-        streak = int(data.get("streak", 0))
-    except (ValueError, TypeError):
-        return jsonify({"error": "Invalid data format for parameters"}), 400
+    used_time = data.get("used_time", 5.0)
+    success = data.get("success", False)
+    difficulty = data.get("difficulty", "normal")
+    streak = data.get("streak", 0)
+    bet_amount = int(data.get("bet_amount", 0))
 
-    grade, new_streak = calculate_grade(used_time, success, streak)
+    if not isinstance(used_time, (int, float)):
+        return jsonify({"error": "used_time 类型不合法"}), 400
 
-    try:
-        db = get_db()
-        cursor = db.cursor()
-        cursor.execute(
-            """
-            INSERT INTO challenges 
-            (mode, difficulty, content, used_time, grade, streak, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """,
-            (
-                "word",
-                difficulty,
-                content,
-                used_time,
-                grade,
-                new_streak,
-                datetime.now().isoformat(),
-            ),
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT xp, total_solved FROM user_stats WHERE id = 1")
+    stats = cursor.fetchone()
+    current_xp = stats["xp"]
+
+    # 防作弊检测：响应时间过快判定为异常
+    if success and used_time < 0.3:
+        return jsonify(
+            {
+                "success": False,
+                "grade": "F",
+                "interactive_comment": "⚠️ 检测到异常作弊行为，收益已被安全系统拦截。",
+                "earned_xp": 0,
+                "user_profile": {
+                    "xp": current_xp,
+                    "total_solved": stats["total_solved"],
+                    "title": calculate_title(current_xp),
+                },
+            }
         )
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        return jsonify({"error": f"Database error: {str(e)}"}), 500
+
+    earned_xp = 0
+    grade = "F"
+    interactive_comment = "挑战完成！"
+
+    # 1. 赌徒模式结算逻辑
+    if difficulty == "gambler":
+        if bet_amount <= 0 or bet_amount > current_xp:
+            return jsonify({"error": "不合法的下注金额！"}), 400
+        if success:
+            earned_xp = bet_amount
+            grade = "SS"
+            interactive_comment = f"🎰 赌徒大捷！高风险下注赢取 {bet_amount} XP 奖励！"
+        else:
+            earned_xp = -bet_amount
+            grade = "F"
+            interactive_comment = f"💸 赌徒失利！扣除下注的 {bet_amount} XP！"
+    
+    # 2. 各难度独立差异化 XP 奖励机制
+    else:
+        if success:
+            # 各难度独立的丰厚 XP 奖励基底
+            base_rewards = {
+                "easy": 10,     # 简单模式基础奖励
+                "normal": 25,   # 进阶模式基础奖励
+                "hard": 60,     # 困难模式高额奖励
+                "hell": 120     # 地狱模式史诗长难句奖励
+            }
+            earned_xp = base_rewards.get(difficulty, 15)
+
+            # 速度评级额外加速加成
+            if used_time <= 2.5:
+                grade = "SS"
+                earned_xp += int(earned_xp * 0.5) # 极速额外加成 50%
+            elif used_time <= 5.0:
+                grade = "S"
+                earned_xp += int(earned_xp * 0.3)
+            elif used_time <= 9.0:
+                grade = "A"
+                earned_xp += int(earned_xp * 0.15)
+            else:
+                grade = "B"
+
+            # 连击额外加成 (每连击一次额外+5 XP)
+            if streak >= 2:
+                earned_xp += streak * 5
+
+            comments = {
+                "SS": f"⚡ 闪电响应（{round(used_time, 1)}秒），SS级超凡通关！",
+                "S": f"🔥 反应敏捷，S级完美通关！",
+                "A": f"🌟 稳扎稳打，A级顺利通过！",
+                "B": f"👍 通关成功！",
+            }
+            interactive_comment = comments.get(grade, "挑战成功！")
+        else:
+            earned_xp = 0
+            grade = "F"
+            interactive_comment = "挑战拼写失败，再接再厉！"
+
+    new_xp = max(0, current_xp + earned_xp)
+    new_solved = stats["total_solved"] + (1 if success and difficulty != "gambler" else 0)
+    new_title = calculate_title(new_xp)
+
+    cursor.execute(
+        """
+        UPDATE user_stats 
+        SET xp = ?, total_solved = ?, title = ?
+        WHERE id = 1
+    """,
+        (new_xp, new_solved, new_title),
+    )
+    db.commit()
+
+    logging.info(f"挑战结算: 难度={difficulty}, 结果={'成功' if success else '失败'}, 获得XP={earned_xp}, 当前总XP={new_xp}")
 
     return jsonify(
         {
             "success": success,
             "grade": grade,
             "used_time": used_time,
-            "streak": new_streak,
+            "streak": streak if success else 0,
+            "interactive_comment": interactive_comment,
+            "earned_xp": earned_xp,
+            "user_profile": {
+                "xp": new_xp,
+                "total_solved": new_solved,
+                "title": new_title,
+            },
         }
     )
 
 
-# ==================== 🏆 排行榜 ====================
-@app.route("/api/leaderboard", methods=["GET"])
-def leaderboard():
-    try:
-        limit = int(request.args.get("limit", 20))
-        offset = int(request.args.get("offset", 0))
-    except ValueError:
-        return jsonify({"error": "Invalid limit or offset parameters"}), 400
+# ==========================================
+# 5. 应用入口启动
+# ==========================================
 
-    db = get_db()
-    cursor = db.cursor()
-
-    cursor.execute(
-        """
-        SELECT difficulty, content, used_time, grade, streak, created_at
-        FROM challenges
-        ORDER BY
-            CASE grade
-                WHEN 'SS' THEN 0
-                WHEN 'S' THEN 1
-                WHEN 'A' THEN 2
-                WHEN 'B' THEN 3
-                WHEN 'C' THEN 4
-                WHEN 'D' THEN 5
-                WHEN 'E' THEN 6
-                ELSE 7
-            END,
-            used_time ASC
-        LIMIT ? OFFSET ?
-    """,
-        (limit, offset),
-    )
-
-    rows = cursor.fetchall()
-
-    return jsonify(
-        [
-            {
-                "difficulty": r["difficulty"],
-                "content": r["content"],
-                "time": r["used_time"],
-                "grade": r["grade"],
-                "streak": r["streak"],
-                "created_at": r["created_at"],
-            }
-            for r in rows
-        ]
-    )
-
-
-# ==================== 🚀 启动 ====================
 if __name__ == "__main__":
     init_db()
-    print("🚀 Open-Source RPG English API running at http://127.0.0.1:5000")
-    app.run(debug=True)
+    logging.info("==================================================")
+    logging.info("🚀 RPG 英语冒险后端服务已成功启动（v8.0 扩展版）！")
+    logging.info("🌐 监听地址: http://127.0.0.1:5000")
+    logging.info("==================================================")
+    app.run(host="127.0.0.1", port=5000, debug=True)

@@ -1,63 +1,78 @@
 {
-"project_name": "daily-english-word-api",
-"description": "一个基于 Flask 的开源级游戏化地道美语、俚语与语法学习 API，支持多难度关卡（Easy 至 Hell）、语法解析、挑战评分、连击机制与分页排行榜功能，适合英语学习者、游戏开发者与 Python 练手。",
-"owner": "yiyuanqian111666",
-"repo": "daily-english-word-api",
-"license": "MIT",
-"language": "Python",
-"framework": "Flask",
-"independent": true,
-"public": true,
-"homepage": "https://github.com/yiyuanqian111666/daily-english-word-api",
+  "project_name": "daily-english-word-api",
+  "description": "一个基于 Flask 的开源级游戏化地道美语、俚语、长句与语法学习 API，支持多难度关卡（Easy 至 Hell）、赌徒高风险模式、冒险者杂货铺与背包系统、多维度分类筛选、沉浸式古典音乐播放器、XP 经验值称号系统、挑战评分与连击机制。",
+  "owner": "yiyuanqian111666",
+  "repo": "daily-english-word-api",
+  "license": "MIT",
+  "language": "Python",
+  "framework": "Flask",
+  "independent": true,
+  "public": true,
+  "homepage": "https://github.com/yiyuanqian111666/daily-english-word-api",
 
-"keywords": [
-"MTL",
-"open-source",
-"english-learning",
-"vocabulary",
-"flask-api",
-"education",
-"american-slang",
-"json api",
-"sqlite",
-"backend",
-"learning-app",
-"gamification",
-"multi-difficulty"
-],
+  "keywords": [
+    "MTL",
+    "open-source",
+    "english-learning",
+    "vocabulary",
+    "sentences",
+    "flask-api",
+    "education",
+    "american-slang",
+    "json api",
+    "sqlite",
+    "backend",
+    "learning-app",
+    "gamification",
+    "multi-difficulty",
+    "flask-cors",
+    "shop-system",
+    "gambler-mode",
+    "inventory",
+    "category-filter",
+    "music-player"
+  ],
 
-"topics": [
-"英语学习",
-"美式俚语",
-"RESTful API",
-"Python 开发者",
-"教育工具",
-"Flask 项目",
-"后端开发",
-"单词与语法记忆系统"
-],
+  "topics": [
+    "英语学习",
+    "美式俚语",
+    "真实情境句子",
+    "RESTful API",
+    "Python 开发者",
+    "教育工具",
+    "Flask 项目",
+    "后端开发",
+    "游戏化背单词系统",
+    "前后端分离",
+    "冒险商店系统",
+    "赌徒模式",
+    "古典音乐播放"
+  ],
 
-"features": [
-"500+ 高质量地道美语、美剧俚语与高级长难句词库",
-"四重游戏化难度关卡（Easy, Normal, Hard, Hell）",
-"语法解析（grammar_note）与示例展示",
-"自动初始化内置海量词库",
-"挑战模式（限时拼写打字与智能校验）",
-"多级评分系统（SS 至 F）与连击（streak）机制",
-"支持分页的高效排行榜系统",
-"RESTful API 设计与 Flask 上下文生命周期管理",
-"SQLite 轻量高性能数据存储"
-],
+  "features": [
+    "海量高质量地道美语、美剧俚语与真实情境长句词库",
+    "多维度难度关卡（Easy, Normal, Hard, Hell）及高风险高回报的赌徒模式（Gambler）",
+    "冒险者杂货铺与用户背包系统，支持使用 XP 购买双倍经验药水、错题免死金牌与稀有/传奇称号",
+    "多维度分类精确筛选（水果、短语动词、商业职场、心理抗压、地道俚语、哲学思辨等）",
+    "内置免版权史诗古典音乐播放器（含贝多芬《艾格蒙特序曲》、维瓦尔第《四季》等交响乐伴奏）",
+    "语法解析（grammar_note）与地道示例展示",
+    "自动初始化内置海量词库、商店道具与 RPG 个人成长属性表",
+    "挑战模式（限时拼写打字与防作弊安全校验）",
+    "AI 互动评语与动态 RPG 称号晋升系统（XP 经验值与成就累积）",
+    "多级评分系统（SS 至 F）与连击（streak）机制",
+    "内置 Flask-CORS 跨域支持，无缝对接现代化前端可视化页面",
+    "SQLite 轻量高性能数据存储"
+  ],
 
-"educational": true,
-"mtl_compliant": true,
+  "educational": true,
+  "mtl_compliant": true,
 
-"contact": {
-"author": "yiyuanqian111666",
-"email": "yiyuanqian666@outlook.com"
-},
+  "contact": {
+    "author": "yiyuanqian111666",
+    "email": "yiyuanqian666@outlook.com"
+  },
 
-"version": "4.0.0",
-"created_at": "2025-07-15",
-"updated_at": "2026-10-01"
+  "version": "7.0.0",
+  "created_at": "2025-07-15",
+  "updated_at": "2026-10-02"
 }
