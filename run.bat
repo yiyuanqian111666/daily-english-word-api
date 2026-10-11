@@ -3,7 +3,7 @@
 chcp 65001 >nul
 
 echo ========================================================
-echo    🚀 正在准备启动 RPG English API (v7.0 冒险商店与赌徒模式终极版)...
+echo    🚀 正在准备启动 RPG English API (v9.0 多邻国三阶段阶梯学习版)...
 echo ========================================================
 
 :: 1. 检查 Python 环境
@@ -25,7 +25,7 @@ if exist venv (
     call .venv\Scripts\activate.bat
 )
 
-:: 3. 安装依赖（包含 Flask-CORS 等最新扩展）
+:: 3. 安装依赖（包含 Flask-CORS 等扩展）
 if exist requirements.txt (
     echo 📦 正在检查并安装依赖...
     python -m pip install --upgrade pip >nul 2>&1
@@ -35,7 +35,7 @@ if exist requirements.txt (
 )
 
 :: 4. 启动服务
-echo 🌟 正在启动 API 服务、冒险商店系统与古典音乐引擎 (run.py)...
+echo 🌟 正在启动 API 服务、多邻国三阶段特训系统与冒险商店 (run.py)...
 echo ========================================================
 python run.py
 

@@ -1,6 +1,6 @@
 {
   "project_name": "daily-english-word-api",
-  "description": "一个基于 Flask 的开源级游戏化地道美语、俚语、长句与语法学习 API，支持多难度关卡（Easy 至 Hell）、赌徒高风险模式、冒险者杂货铺与背包系统、多维度分类筛选、沉浸式古典音乐播放器、XP 经验值称号系统、挑战评分与连击机制。",
+  "description": "一个基于 Flask 的开源级游戏化地道美语、俚语、长句与语法学习 API，完美支持多邻国式三阶段阶梯学习（认读、拼写、极限默写挑战）、多难度关卡（Easy 至 Hell）、冒险者杂货铺与背包系统、XP 经验值称号系统、动态时间限制与防作弊校验。",
   "owner": "yiyuanqian111666",
   "repo": "daily-english-word-api",
   "license": "MIT",
@@ -18,8 +18,9 @@
     "sentences",
     "flask-api",
     "education",
-    "american-slang",
-    "json api",
+    "duolingo-style",
+    "three-stage-learning",
+    "json-api",
     "sqlite",
     "backend",
     "learning-app",
@@ -27,16 +28,15 @@
     "multi-difficulty",
     "flask-cors",
     "shop-system",
-    "gambler-mode",
     "inventory",
-    "category-filter",
-    "music-player"
+    "challenge-mode"
   ],
 
   "topics": [
     "英语学习",
-    "美式俚语",
-    "真实情境句子",
+    "多邻国式学习",
+    "三阶段特训",
+    "美式俚语与长难句",
     "RESTful API",
     "Python 开发者",
     "教育工具",
@@ -44,18 +44,15 @@
     "后端开发",
     "游戏化背单词系统",
     "前后端分离",
-    "冒险商店系统",
-    "赌徒模式",
-    "古典音乐播放"
+    "冒险商店系统"
   ],
 
   "features": [
     "海量高质量地道美语、美剧俚语与真实情境长句词库",
-    "多维度难度关卡（Easy, Normal, Hard, Hell）及高风险高回报的赌徒模式（Gambler）",
+    "多邻国式三阶段渐进式学习闭环（阶段一：沉浸式认读 $\rightarrow$ 阶段二：互动式拼写辅助 $\rightarrow$ 阶段三：极限盲打默写挑战）",
+    "多维度难度关卡（Easy, Normal, Hard, Hell）及各难度独立的倒计时限时与 XP 经验值奖励基底",
     "冒险者杂货铺与用户背包系统，支持使用 XP 购买双倍经验药水、错题免死金牌与稀有/传奇称号",
-    "多维度分类精确筛选（水果、短语动词、商业职场、心理抗压、地道俚语、哲学思辨等）",
-    "内置免版权史诗古典音乐播放器（含贝多芬《艾格蒙特序曲》、维瓦尔第《四季》等交响乐伴奏）",
-    "语法解析（grammar_note）与地道示例展示",
+    "语法解析（grammar_note）与地道示例展示、图片直观辅助认读",
     "自动初始化内置海量词库、商店道具与 RPG 个人成长属性表",
     "挑战模式（限时拼写打字与防作弊安全校验）",
     "AI 互动评语与动态 RPG 称号晋升系统（XP 经验值与成就累积）",
@@ -72,7 +69,7 @@
     "email": "yiyuanqian666@outlook.com"
   },
 
-  "version": "7.0.0",
+  "version": "9.0.0",
   "created_at": "2025-07-15",
-  "updated_at": "2026-10-02"
+  "updated_at": "2026-10-10"
 }

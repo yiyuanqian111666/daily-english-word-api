@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPG 英语冒险 - 多邻国式闯关与考试系统</title>
+    <title>RPG 英语冒险 - 多邻国式三阶段进阶与挑战系统</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
@@ -32,7 +32,7 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-lg text-white tracking-wide">RPG 英语世界</h1>
-                    <p class="text-xs text-slate-400">多邻国闯关与挑战模式 v9.0</p>
+                    <p class="text-xs text-slate-400">多邻国三阶段渐进式版 v9.0</p>
                 </div>
             </div>
 
@@ -59,54 +59,60 @@
     <!-- 主体内容区 -->
     <main class="max-w-4xl mx-auto px-4 py-8">
 
-        <!-- 视图 1：多邻国式关卡大地图/模式选择 -->
+        <!-- 视图 1：难度选择大地图 -->
         <div id="view-map" class="space-y-6">
             <div class="text-center mb-8">
-                <h2 class="text-2xl font-extrabold text-white mb-2">选择你的冒险关卡</h2>
-                <p class="text-sm text-slate-400">通过日常学习积累经验，或直接参加排位挑战考试晋升段位！</p>
+                <h2 class="text-2xl font-extrabold text-white mb-2">选择你的学习难度与关卡</h2>
+                <p class="text-sm text-slate-400">多邻国式阶梯学习：先学会认读 $\rightarrow$ 再进行拼写训练 $\rightarrow$ 最后挑战极限默写！</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- 学习关卡 -->
-                <div onclick="startStage('learn')" class="bg-gradient-to-br from-blue-900/40 to-slate-900 border border-blue-500/40 hover:border-blue-400 rounded-2xl p-6 cursor-pointer transition transform hover:-translate-y-1 shadow-xl flex flex-col justify-between">
-                    <div>
-                        <div class="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center text-xl mb-4 border border-blue-500/30">
-                            <i class="fa-solid fa-book-open"></i>
-                        </div>
-                        <h3 class="text-lg font-bold text-white mb-1">📖 基础日常特训</h3>
-                        <p class="text-xs text-slate-400 mb-4">通过多题型（选择、拼写、听力）稳步积累词汇量与 XP 奖励。</p>
-                    </div>
-                    <div class="flex justify-between items-center text-xs text-blue-400 font-semibold pt-4 border-t border-slate-800">
-                        <span>稳步升级</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </div>
-                </div>
+            <!-- 难度选择面板 -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <button onclick="selectDifficulty('easy')" id="btn-diff-easy" class="diff-btn bg-blue-900/30 border border-blue-500/60 hover:border-blue-400 p-4 rounded-xl text-center transition">
+                    <div class="text-blue-400 font-bold text-base mb-1">🟢 简单</div>
+                    <div class="text-xs text-slate-400">日常/基础词汇</div>
+                </button>
+                <button onclick="selectDifficulty('normal')" id="btn-diff-normal" class="diff-btn bg-emerald-900/30 border border-emerald-500/60 hover:border-emerald-400 p-4 rounded-xl text-center transition">
+                    <div class="text-emerald-400 font-bold text-base mb-1">🔵 进阶</div>
+                    <div class="text-xs text-slate-400">职场与短语</div>
+                </button>
+                <button onclick="selectDifficulty('hard')" id="btn-diff-hard" class="diff-btn bg-amber-900/30 border border-amber-500/60 hover:border-amber-400 p-4 rounded-xl text-center transition">
+                    <div class="text-amber-400 font-bold text-base mb-1">🟠 困难</div>
+                    <div class="text-xs text-slate-400">学术与俚语</div>
+                </button>
+                <button onclick="selectDifficulty('hell')" id="btn-diff-hell" class="diff-btn bg-rose-900/30 border border-rose-500/60 hover:border-rose-400 p-4 rounded-xl text-center transition">
+                    <div class="text-rose-400 font-bold text-base mb-1">🔴 地狱</div>
+                    <div class="text-xs text-slate-400">哲学与长难句</div>
+                </button>
+            </div>
 
-                <!-- 极限时间挑战考试 -->
-                <div onclick="startStage('exam')" class="bg-gradient-to-br from-amber-900/40 to-slate-900 border border-amber-500/40 hover:border-amber-400 rounded-2xl p-6 cursor-pointer transition transform hover:-translate-y-1 shadow-xl flex flex-col justify-between">
+            <!-- 关卡启动卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 三阶段闯关入口 -->
+                <div onclick="startStageFlow()" class="bg-gradient-to-br from-purple-900/40 to-slate-900 border border-purple-500/40 hover:border-purple-400 rounded-2xl p-6 cursor-pointer transition transform hover:-translate-y-1 shadow-xl flex flex-col justify-between">
                     <div>
-                        <div class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center text-xl mb-4 border border-amber-500/30">
-                            <i class="fa-solid fa-stopwatch"></i>
+                        <div class="w-12 h-12 bg-purple-500/20 text-purple-400 rounded-xl flex items-center justify-center text-xl mb-4 border border-purple-500/30">
+                            <i class="fa-solid fa-stairs"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-white mb-1">⚡ 60秒极限排位考试</h3>
-                        <p class="text-xs text-slate-400 mb-4">多邻国闪电战风格！在 60 秒内连续答题，答对越多奖励翻倍，考验手速与直觉。</p>
+                        <h3 class="text-lg font-bold text-white mb-1">🚀 开始三阶段渐进特训</h3>
+                        <p class="text-xs text-slate-400 mb-4">执行多邻国标准流程：<br>1. 沉浸认读 $\rightarrow$ 2. 互动拼写 $\rightarrow$ 3. 极限默写挑战。</p>
                     </div>
-                    <div class="flex justify-between items-center text-xs text-amber-400 font-semibold pt-4 border-t border-slate-800">
-                        <span>高额 XP 奖励</span>
+                    <div class="flex justify-between items-center text-xs text-purple-400 font-semibold pt-4 border-t border-slate-800">
+                        <span>当前选中难度: <span id="current-selected-diff" class="text-white uppercase">easy</span></span>
                         <i class="fa-solid fa-arrow-right"></i>
                     </div>
                 </div>
 
                 <!-- 冒险商店入口 -->
-                <div onclick="loadShopItems(); document.getElementById('shop-section').scrollIntoView({behavior: 'smooth'})" class="bg-gradient-to-br from-purple-900/40 to-slate-900 border border-purple-500/40 hover:border-purple-400 rounded-2xl p-6 cursor-pointer transition transform hover:-translate-y-1 shadow-xl flex flex-col justify-between">
+                <div onclick="loadShopItems(); document.getElementById('shop-section').scrollIntoView({behavior: 'smooth'})" class="bg-gradient-to-br from-blue-900/40 to-slate-900 border border-blue-500/40 hover:border-blue-400 rounded-2xl p-6 cursor-pointer transition transform hover:-translate-y-1 shadow-xl flex flex-col justify-between">
                     <div>
-                        <div class="w-12 h-12 bg-purple-500/20 text-purple-400 rounded-xl flex items-center justify-center text-xl mb-4 border border-purple-500/30">
+                        <div class="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center text-xl mb-4 border border-blue-500/30">
                             <i class="fa-solid fa-store"></i>
                         </div>
                         <h3 class="text-lg font-bold text-white mb-1">🛒 冒险补给商店</h3>
-                        <p class="text-xs text-slate-400 mb-4">使用闯关获得的 XP 兑换专属称号、复活道具与属性加成。</p>
+                        <p class="text-xs text-slate-400 mb-4">使用闯关获得的 XP 兑换专属高级称号、加成道具与复活金牌。</p>
                     </div>
-                    <div class="flex justify-between items-center text-xs text-purple-400 font-semibold pt-4 border-t border-slate-800">
+                    <div class="flex justify-between items-center text-xs text-blue-400 font-semibold pt-4 border-t border-slate-800">
                         <span>前往商店</span>
                         <i class="fa-solid fa-arrow-right"></i>
                     </div>
@@ -114,7 +120,7 @@
             </div>
         </div>
 
-        <!-- 视图 2：游戏/考试互动区（默认隐藏） -->
+        <!-- 视图 2：三阶段互动游戏区（默认隐藏） -->
         <div id="view-game" class="hidden bg-rpgcard border border-slate-700/80 rounded-2xl shadow-xl p-6 md:p-8 relative overflow-hidden mb-8">
             
             <!-- 顶栏状态与退出按钮 -->
@@ -123,28 +129,25 @@
                     <button onclick="backToMap()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition border border-slate-600">
                         <i class="fa-solid fa-arrow-left mr-1"></i> 返回地图
                     </button>
-                    <span id="game-mode-tag" class="bg-rpgaccent/20 text-rpgaccent px-2.5 py-1 rounded-md font-semibold">日常特训</span>
+                    <span id="game-stage-tag" class="bg-rpgaccent/20 text-rpgaccent px-2.5 py-1 rounded-md font-semibold">阶段一：认读</span>
                 </div>
                 <div class="flex items-center space-x-4">
                     <span>🔥 连击: <strong id="streak-count" class="text-amber-400">0</strong></span>
-                    <span id="exam-timer-wrapper" class="hidden">⏱️️ 剩余时间: <strong id="exam-timer" class="text-rose-400">60s</strong></span>
-                    <span>⏱️ 耗时: <strong id="timer-display" class="text-cyan-400">0.0s</strong></span>
+                    <span id="timer-wrapper" class="hidden">⏱ 剩余时间: <strong id="exam-timer" class="text-rose-400">15.0s</strong></span>
                 </div>
             </div>
 
-            <!-- 题目容器（动态多题型） -->
+            <!-- 三阶段动态题目容器 -->
             <div id="question-container" class="text-center mb-6">
-                <!-- 动态由 JS 填充：如 听力题、选择题、拼写填空题 -->
+                <!-- 动态填充 -->
             </div>
 
             <!-- 反馈提示栏 -->
             <div id="feedback-box" class="hidden rounded-xl p-4 text-center text-sm font-medium transition animate-fade-in mb-4"></div>
 
-            <!-- 下一步/提交按钮 -->
-            <div class="text-center">
-                <button id="action-btn" onclick="submitAnswer()" class="w-full md:w-auto bg-rpgaccent hover:bg-rpgaccent/80 text-white px-8 py-3 rounded-xl font-semibold transition shadow-lg shadow-rpgaccent/20">
-                    提交答案
-                </button>
+            <!-- 底部操作按钮 -->
+            <div class="text-center" id="action-btn-container">
+                <!-- 动态由 JS 填充按钮 -->
             </div>
         </div>
 
@@ -186,14 +189,12 @@
     <!-- 游戏逻辑脚本 -->
     <script>
         const API_BASE = "http://127.0.0.1:5000";
-        let currentMode = "learn"; // 'learn' 或 'exam'
+        let selectedDifficulty = "easy";
+        let currentStage = 1; // 1: 认读, 2: 拼写, 3: 极限默写
         let currentWordData = null;
-        let startTime = null;
-        let timerInterval = null;
         let streak = 0;
-        let examTimeLeft = 60;
-        let examInterval = null;
-        let examScore = 0;
+        let timerInterval = null;
+        let timeLeft = 15.0;
 
         // === 音效系统 ===
         let audioCtx = null;
@@ -248,7 +249,6 @@
             } catch (e) {}
         }
 
-        // === 浏览器语音 TTS ===
         function speakText(text) {
             if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
@@ -258,156 +258,225 @@
             window.speechSynthesis.speak(utterance);
         }
 
-        // === 模式切换 ===
-        function startStage(mode) {
+        // === 难度选择 ===
+        function selectDifficulty(diff) {
             playClickSound();
-            currentMode = mode;
+            selectedDifficulty = diff;
+            document.querySelectorAll('.diff-btn').forEach(btn => {
+                btn.classList.remove('border-white', 'shadow-lg');
+            });
+            document.getElementById(`btn-diff-${diff}`).classList.add('border-white', 'shadow-lg');
+            document.getElementById('current-selected-diff').innerText = diff;
+        }
+
+        // === 启动三阶段学习流 ===
+        function startStageFlow() {
+            playClickSound();
+            currentStage = 1; 
+            streak = 0;
             document.getElementById('view-map').classList.add('hidden');
             document.getElementById('view-game').classList.remove('hidden');
-
-            const modeTag = document.getElementById('game-mode-tag');
-            const timerWrapper = document.getElementById('exam-timer-wrapper');
-
-            if (mode === 'exam') {
-                modeTag.innerText = "⚡ 60秒限时考试";
-                timerWrapper.classList.remove('hidden');
-                examTimeLeft = 60;
-                examScore = 0;
-                startExamTimer();
-            } else {
-                modeTag.innerText = "📖 日常特训模式";
-                timerWrapper.classList.add('hidden');
-            }
-            fetchNewQuestion();
+            fetchNewWord();
         }
 
         function backToMap() {
             playClickSound();
-            if (examInterval) clearInterval(examInterval);
             if (timerInterval) clearInterval(timerInterval);
             document.getElementById('view-game').classList.add('hidden');
             document.getElementById('view-map').classList.remove('hidden');
         }
 
-        function startExamTimer() {
-            if (examInterval) clearInterval(examInterval);
-            examInterval = setInterval(() => {
-                examTimeLeft--;
-                document.getElementById('exam-timer').innerText = examTimeLeft + 's';
-                if (examTimeLeft <= 0) {
-                    clearInterval(examInterval);
-                    alert(`⏰ 考试时间到！你在本次极限考试中答对了 ${examScore} 道题！`);
-                    backToMap();
-                }
-            }, 1000);
-        }
-
-        // === 获取新题目（多邻国风格：随机生成选择题或填空题） ===
-        async function fetchNewQuestion() {
+        // === 从后端获取一个新单词 ===
+        async function fetchNewWord() {
             try {
-                const res = await fetch(`${API_BASE}/api/learn?difficulty=normal`);
+                const res = await fetch(`${API_BASE}/api/learn?difficulty=${selectedDifficulty}`);
                 const data = await res.json();
                 currentWordData = data;
-
-                const container = document.getElementById('question-container');
+                currentStage = 1; // 每次拿到新词从阶段一开始
+                
                 document.getElementById('feedback-box').classList.add('hidden');
-
-                // 随机决定题型：0 = 拼写填空, 1 = 听力拼写, 2 = 释义选择题
-                const questionType = Math.floor(Math.random() * 3);
-
-                if (questionType === 0) {
-                    // 拼写填空题
-                    container.innerHTML = `
-                        <p class="text-xs text-slate-400 mb-2">请根据中文释义拼写出对应的英文单词：</p>
-                        <h3 class="text-2xl font-bold text-rpggold mb-4">${data.meaning}</h3>
-                        <p class="text-xs text-slate-500 italic mb-6">例句: "${data.example}"</p>
-                        <div class="max-w-md mx-auto">
-                            <input type="text" id="user-input" placeholder="输入英文拼写..." autocomplete="off" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rpgaccent text-center font-medium">
-                        </div>
-                    `;
-                } else if (questionType === 1) {
-                    // 听力题
-                    container.innerHTML = `
-                        <p class="text-xs text-slate-400 mb-2">🔊 听音辨词：点击喇叭收听发音并拼写</p>
-                        <button onclick="speakCurrentWord()" class="bg-rpgaccent/20 hover:bg-rpgaccent/40 text-rpgaccent px-6 py-3 rounded-full border border-rpgaccent/40 mb-6 transition">
-                            <i class="fa-solid fa-volume-high text-xl mr-2"></i> 播放发音
-                        </button>
-                        <p class="text-xs text-slate-400 mb-4">释义提示：${data.meaning}</p>
-                        <div class="max-w-md mx-auto">
-                            <input type="text" id="user-input" placeholder="输入你听到的英文..." autocomplete="off" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rpgaccent text-center font-medium">
-                        </div>
-                    `;
-                    speakCurrentWord();
-                } else {
-                    // 经典拼写模式
-                    container.innerHTML = `
-                        <p class="text-xs text-slate-400 mb-2">词条：<strong class="text-white text-lg">${data.word}</strong></p>
-                        <h3 class="text-xl font-bold text-slate-200 mb-4">${data.meaning}</h3>
-                        <div class="max-w-md mx-auto">
-                            <input type="text" id="user-input" placeholder="请输入英文拼写..." autocomplete="off" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rpgaccent text-center font-medium">
-                        </div>
-                    `;
-                }
-
-                // 回车绑定
-                const inputEl = document.getElementById('user-input');
-                if(inputEl) {
-                    inputEl.focus();
-                    inputEl.addEventListener('keypress', (e) => {
-                        if (e.key === 'Enter') submitAnswer();
-                    });
-                }
-
-                startTimer();
+                updateStageHeader();
+                renderStageContent();
             } catch (err) {
-                console.error("加载题目失败:", err);
+                console.error("获取单词失败:", err);
             }
         }
 
-        function speakCurrentWord() {
-            if (currentWordData) speakText(currentWordData.word);
+        function updateStageHeader() {
+            const stageTags = {
+                1: "📖 阶段一：沉浸式认读",
+                2: "✍️ 阶段二：互动拼写辅助",
+                3: "⚡ 阶段三：极限默写挑战"
+            };
+            document.getElementById('game-stage-tag').innerText = stageTags[currentStage];
+            document.getElementById('streak-count').innerText = streak;
+
+            if (currentStage === 3 && currentWordData && currentWordData.challenge_config) {
+                timeLeft = currentWordData.challenge_config.time_limit;
+                document.getElementById('timer-wrapper').classList.remove('hidden');
+                startChallengeTimer();
+            } else {
+                document.getElementById('timer-wrapper').classList.add('hidden');
+            }
         }
 
-        function startTimer() {
+        function startChallengeTimer() {
             if (timerInterval) clearInterval(timerInterval);
-            startTime = Date.now();
             timerInterval = setInterval(() => {
-                const elapsed = (Date.now() - startTime) / 1000;
-                document.getElementById('timer-display').innerText = elapsed.toFixed(1) + 's';
+                timeLeft -= 0.1;
+                document.getElementById('exam-timer').innerText = timeLeft.toFixed(1) + 's';
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    submitChallengeResult(false, 0.0);
+                }
             }, 100);
         }
 
-        // === 提交答案 ===
-        async function submitAnswer() {
-            if (!currentWordData) return;
-            clearInterval(timerInterval);
-            const usedTime = (Date.now() - startTime) / 1000;
-            const inputEl = document.getElementById('user-input');
-            const userTyped = inputEl ? inputEl.value.trim() : "";
-            const targetWord = currentWordData.word.trim();
+        // === 渲染各阶段界面 ===
+        function renderStageContent() {
+            const container = document.getElementById('question-container');
+            const btnContainer = document.getElementById('action-btn-container');
+            const data = currentWordData;
 
-            const success = userTyped.toLowerCase() === targetWord.toLowerCase();
+            if (currentStage === 1) {
+                container.innerHTML = `
+                    <div class="mb-4">
+                        ${data.image_url ? `<img src="${data.image_url}" class="w-48 h-32 object-cover mx-auto rounded-xl mb-4 border border-slate-700 shadow-md">` : ''}
+                        <h3 class="text-3xl font-extrabold text-white mb-2">${data.word}</h3>
+                        <button onclick="speakText('${data.word}')" class="bg-rpgaccent/20 hover:bg-rpgaccent/40 text-rpgaccent px-4 py-2 rounded-full border border-rpgaccent/40 text-xs transition mb-3">
+                            <i class="fa-solid fa-volume-high mr-1.5"></i> 播放标准发音
+                        </button>
+                        <h4 class="text-xl font-bold text-rpggold mb-2">${data.meaning}</h4>
+                        <p class="text-sm text-slate-300 italic max-w-md mx-auto mb-2">"${data.example}"</p>
+                        ${data.grammar_note ? `<p class="text-xs text-blue-400 bg-blue-950/40 p-2 rounded-lg max-w-md mx-auto">💡 语法笔记: ${data.grammar_note}</p>` : ''}
+                    </div>
+                `;
+                speakText(data.word);
+                btnContainer.innerHTML = `
+                    <button onclick="nextStage()" class="w-full md:w-auto bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-xl font-semibold transition shadow-lg">
+                        记住了，进入下一步 <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                `;
+            } else if (currentStage === 2) {
+                const targetWord = data.word;
+                const letters = listChars(targetWord);
+                const hint = `首字母大写提示: ${targetWord[0].toUpperCase()}... (共 ${targetWord.length} 个字符)`;
+
+                container.innerHTML = `
+                    <p class="text-xs text-slate-400 mb-2">中文释义：<strong class="text-white text-lg">${data.meaning}</strong></p>
+                    <p class="text-xs text-amber-400 mb-4">${hint}</p>
+                    <p class="text-xs text-slate-500 mb-4">打乱字母参考：<span class="tracking-widest text-rpgaccent font-mono bg-slate-900 px-3 py-1 rounded border border-slate-700">${letters.join(' ')}</span></p>
+                    <div class="max-w-md mx-auto">
+                        <input type="text" id="user-input" placeholder="输入正确的单词拼写..." autocomplete="off" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rpgaccent text-center font-medium">
+                    </div>
+                `;
+                btnContainer.innerHTML = `
+                    <button onclick="checkStage2()" class="w-full md:w-auto bg-rpgaccent hover:bg-rpgaccent/80 text-white px-8 py-3 rounded-xl font-semibold transition shadow-lg">
+                        提交拼写
+                    </button>
+                `;
+                setTimeout(() => {
+                    const inputEl = document.getElementById('user-input');
+                    if(inputEl) {
+                        inputEl.focus();
+                        inputEl.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkStage2(); });
+                    }
+                }, 100);
+            } else if (currentStage === 3) {
+                container.innerHTML = `
+                    <p class="text-xs text-slate-400 mb-2">🔥 【极限盲打默写】根据中文释义直接默写英文：</p>
+                    <h3 class="text-2xl font-bold text-rpggold mb-4">${data.meaning}</h3>
+                    <p class="text-xs text-slate-500 italic mb-6">例句: "${data.example}"</p>
+                    <div class="max-w-md mx-auto">
+                        <input type="text" id="user-input" placeholder="盲打默写英文单词..." autocomplete="off" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 text-center font-medium">
+                    </div>
+                `;
+                btnContainer.innerHTML = `
+                    <button onclick="checkStage3()" class="w-full md:w-auto bg-rose-600 hover:bg-rose-500 text-white px-8 py-3 rounded-xl font-semibold transition shadow-lg">
+                        确认默写并提交
+                    </button>
+                `;
+                setTimeout(() => {
+                    const inputEl = document.getElementById('user-input');
+                    if(inputEl) {
+                        inputEl.focus();
+                        inputEl.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkStage3(); });
+                    }
+                }, 100);
+            }
+        }
+
+        function listChars(str) {
+            const arr = str.replace(/ /g, '').split('');
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // === 阶段一流转 ===
+        function nextStage() {
+            playSuccessSound();
+            currentStage = 2;
+            updateStageHeader();
+            renderStageContent();
+        }
+
+        // === 阶段二校验 ===
+        function checkStage2() {
+            const inputEl = document.getElementById('user-input');
+            const typed = inputEl ? inputEl.value.trim() : "";
+            const target = currentWordData.word.trim();
+
+            if (typed.toLowerCase() === target.toLowerCase()) {
+                playSuccessSound();
+                showFeedback(true, "✍️ 拼写辅助通过，进入终极盲打默写！", 15);
+                currentStage = 3;
+                setTimeout(() => {
+                    updateStageHeader();
+                    renderStageContent();
+                }, 1200);
+            } else {
+                playFailSound();
+                showFeedback(false, `拼写错误，正确答案是: ${currentWordData.word}`, 0);
+            }
+        }
+
+        // === 阶段三校验与后端结算 ===
+        function checkStage3() {
+            if (timerInterval) clearInterval(timerInterval);
+            const usedTime = currentWordData.challenge_config.time_limit - timeLeft;
+            const inputEl = document.getElementById('user-input');
+            const typed = inputEl ? inputEl.value.trim() : "";
+            const target = currentWordData.word.trim();
+            const success = typed.toLowerCase() === target.toLowerCase();
+
+            submitChallengeResult(success, usedTime);
+        }
+
+        async function submitChallengeResult(success, usedTime) {
+            if (timerInterval) clearInterval(timerInterval);
 
             if (success) {
                 streak++;
-                examScore++;
                 playSuccessSound();
             } else {
                 streak = 0;
                 playFailSound();
             }
-            document.getElementById('streak-count').innerText = streak;
 
             try {
                 const res = await fetch(`${API_BASE}/api/challenge/submit`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        word_id: currentWordData.id,
+                        stage: 3,
                         used_time: usedTime,
                         success: success,
-                        difficulty: currentMode === 'exam' ? 'hard' : 'normal',
-                        streak: streak,
-                        bet_amount: 0
+                        difficulty: selectedDifficulty,
+                        streak: streak
                     })
                 });
                 const result = await res.json();
@@ -417,11 +486,13 @@
                     updateUserProfile(result.user_profile);
 
                     if (success) {
-                        setTimeout(fetchNewQuestion, 1500);
+                        setTimeout(() => {
+                            fetchNewWord(); // 顺利通关第三阶段，获取下一个新单词
+                        }, 1600);
                     }
                 }
             } catch (err) {
-                console.error("提交失败:", err);
+                console.error("提交异常:", err);
             }
         }
 
@@ -430,10 +501,10 @@
             box.classList.remove('hidden');
             if (success) {
                 box.className = "rounded-xl p-4 text-center text-sm font-medium bg-emerald-900/40 border border-emerald-500/50 text-emerald-300 animate-fade-in mb-4";
-                box.innerHTML = `<p class="font-bold text-base mb-1">🎉 回答正确！</p><p>${comment}</p><p class="text-xs text-amber-400 mt-1">获得奖励: +${earnedXp} XP</p>`;
+                box.innerHTML = `<p class="font-bold text-base mb-1">🎉 通过！</p><p>${comment}</p><p class="text-xs text-amber-400 mt-1">获得 XP 奖励: +${earnedXp}</p>`;
             } else {
                 box.className = "rounded-xl p-4 text-center text-sm font-medium bg-rose-900/40 border border-rose-500/50 text-rose-300 animate-fade-in mb-4";
-                box.innerHTML = `<p class="font-bold text-base mb-1">❌ 回答错误</p><p>${comment}</p><p class="text-xs text-slate-400 mt-1">正确答案是：<span class="text-white font-bold">${currentWordData.word}</span></p>`;
+                box.innerHTML = `<p class="font-bold text-base mb-1">❌ 未通过</p><p>${comment}</p><p class="text-xs text-slate-400 mt-1">正确答案是：<span class="text-white font-bold">${currentWordData.word}</span></p>`;
             }
         }
 
@@ -531,6 +602,7 @@
 
         window.onload = function() {
             loadShopItems();
+            selectDifficulty('easy');
         };
     </script>
 </body>
