@@ -1,144 +1,140 @@
-# 🌟 Daily English Word & Idiom API
-🎮 一个开源级游戏化地道美语、俚语、长句与语法学习后端 API
-500+ 海量词库 · 四重难度关卡 · 跨域前后端分离 · AI 互动评语 · RPG 成长体系 · 排行榜 —— 全部开箱即用
+# 🌟 RPG English & Shop API (v10.0 多邻国三阶段模块化进阶版)
+🎮 一个开源级游戏化地道美语、俚语、长句与商店经济系统的后端 API
+海量分级词库 · 多邻国三阶段渐进特训 · 跨域前后端分离 · 冒险商店与背包管理 · RPG 称号晋升 —— 全部开箱即用
 
 ---
 
 ## 🚀 为什么这个项目值得 Star？
-- **🎯 极致地道的美语与长句学习**：内置 500+ 条覆盖生活、职场、美剧俚语与高级真实长难句的高质量词库。
-- **🎮 游戏化与 RPG 核心机制**：集成了「多难度关卡 + 限时打字挑战 + AI 趣味评语 + XP 经验值与动态称号升级 + 连胜机制 + 排行榜」。
-- **🌐 现代化跨域前后端分离**：内置 Flask-CORS 跨域支持，无缝对接各类前端静态页面与可视化闯关客户端。
-- **⚡ Clone 即用**：基于 Flask，轻量且健壮，支持零配置本地启动、自动数据库初始化与浏览器自动唤起。
-- **🔍 功能完备**：支持按难度与分类多维获取学习内容、语法解析、关键词模糊检索与高效分页排行榜。
+- **🎯 极致地道的美语与长句学习**：内置高质量的多维度词库，覆盖日常起居、职场商务、美剧俚语与高级哲学长难句。
+- **🎮 多邻国式三阶段渐进特训**：独创「沉浸式认读 → 互动拼写辅助 → 极限盲打默写」标准流程，科学巩固记忆。
+- **🛒 完整的 RPG 经济与商店系统**：支持通关赚取 XP 经验值、在冒险商店中购买双倍经验药水、错题免死金牌、高级提示卷轴及尊贵动态称号。
+- **🌐 现代化模块化架构**：采用 Flask Blueprint 蓝图解耦，内置 Flask-CORS 跨域支持，无缝对接前后端分离客户端。
+- **⚡ Clone 即用**：轻量健壮，支持零配置本地启动、SQLite 数据库自动初始化、一键脚本部署与浏览器自动唤起。
 
 ---
 
 ## ✨ 核心功能一览
 
-### 📘 学习与关卡模式
+### 📘 学习与多阶段闯关模式
 - **四重游戏化难度关卡（Easy 至 Hell）**：
-  - 🟢 **Easy (简单)**：基础高频生活词汇与单句。
-  - 🟡 **Normal (正常)**：美国人日常高频短语。
-  - 🔴 **Hard (困难)**：地道美式俚语与社交黑话。
-  - 💀 **Hell (地狱)**：高阶习语、美剧连读与复杂语法长难句。
-- **语法解析**：提供详尽的语法和场景注释 (`grammar_note`)。
-- **RPG 个人状态追踪**：每次获取学习内容时同步返回当前的经验值（XP）与动态称号。
+  - 🟢 **Easy (简单)**：日常高频基础词汇。
+  - 🔵 **Normal (进阶)**：职场常用短语与表达。
+  - 🟠 **Hard (困难)**：美式俚语与社交黑话。
+  - 🔴 **Hell (地狱)**：高级哲学长难句与名言。
+- **多阶段特训流程 (`/api/learn`)**：
+  - **阶段一（认读）**：图文结合、标准发音与语法解析（`grammar_note`）。
+  - **阶段二（拼写辅助）**：打乱字母参考与首字母提示。
+  - **阶段三（极限默写）**：限时盲打默写挑战与防作弊校验。
+- **RPG 个人状态追踪**：实时同步当前的经验值（XP）、已通关总数与动态称号（初学冒险者 → 语言学徒 → 地道美语精锐 → 英语大宗师 → 传说中英灵）。
 
-### 🧠 挑战与 AI 互动评语系统
-- ⏱ 限时 20 秒完成拼写或打字挑战。
-- ✍ 严格记录用时、准确度与连续打卡 (`Streak`)。
-- 🤖 **AI 互动评语 (`interactive_comment`)**：根据通关表现智能生成趣味鼓励或吐槽。
-- 📈 **XP 经验值晋升**：通关成功即可累积经验，自动解锁更高阶的语言家称号（如“初学冒险者” -> “语言学徒” -> “地道美语精锐” -> “英语大宗师”）。
-
-### 🏅 评级与排行榜系统
-- **评级体系**：`SS · S · A · B · C · D · E · F`（用时越短，评级越高；超时或失败直接评为 F，连胜清零）。
-- **高效排行榜**：
-  - 支持按难度筛选。
-  - 支持分页查询（`limit` / `offset`），数据再多也不崩溃。
-  - 智能多级排序（评级优选 > 用时最短 > 提交时间）。
+### 🛒 冒险商店与背包系统 (`/api/shop/*`)
+- **丰富的补给道具**：
+  - 🧪 **双倍经验药水**：通关 XP 翻倍加成。
+  - 🛡️ **错题免死金牌**：挑战失败时抵扣扣分与连击中断。
+  - 📜 **高级提示卷轴**：自动点亮字母提示。
+  - 👑 **专属炫酷称号**：一键解锁并佩戴【学霸附体】、【英语大宗师】、【传说中英灵】等巅峰荣誉。
+- **背包管理**：实时查看已购道具与库存数量。
 
 ---
 
 ## ⚡ 30 秒快速启动
 
-### 1. 启动后端 API
+### 1. 一键脚本启动（推荐）
+- **Windows**：双击运行 `run.bat`（自带编码修复、环境检查与依赖自动安装）。
+- **Linux / macOS**：赋予权限后运行 `./run.sh`。
+
+### 2. 手动启动后端
 ```bash
 git clone [https://github.com/yiyuanqian111666/daily-english-word-api.git](https://github.com/yiyuanqian111666/daily-english-word-api.git)
 cd daily-english-word-api
 
-# 安装依赖（包含 Flask-CORS 等最新扩展）
+# 安装依赖
 pip install -r requirements.txt
 
-# 启动服务 (会自动初始化海量词库、打开浏览器并进入 Debug 模式)
+# 启动服务 (会自动初始化数据库、打开浏览器并进入 Debug 模式)
 python run.py
-(或者在 Windows 下直接双击运行 run.bat，Linux/macOS 下运行 ./run.sh)
+3. 打开前端页面
+直接双击打开项目中的 index.html，前端将自动与运行在 http://127.0.0.1:5000 的后端 API 建立通信并开启沉浸式闯关！
 
-2. 打开前端可视化页面
-直接双击打开项目中的 index.html 即可开始沉浸式闯关背单词，前端会自动与运行在 http://127.0.0.1:5000 的后端 API 进行通信！
-
-🔥 API 使用示例
-🎓 1. 获取学习内容（支持难度筛选）
-HTTP GET: /api/learn?difficulty=hard&category=slang
+🔥 API 接口使用示例
+🎓 1. 获取多阶段学习内容
+HTTP GET: /api/learn?difficulty=easy&stage=1
 
 JSON 响应示例：
 
 JSON
 {
-  "id": 105,
-  "word": "spill the tea",
-  "meaning": "八卦/吐露实情",
-  "example": "Come on, spill the tea! What happened at the party last night?",
-  "level": 3,
-  "difficulty": "hard",
-  "category": "slang",
-  "grammar_note": "现代美式流行俚语：爆料、八卦。",
-  "challenge_after": 3,
+  "id": 1,
+  "word": "apple",
+  "meaning": "苹果",
+  "example": "An apple a day keeps the doctor away.",
+  "level": 1,
+  "difficulty": "easy",
+  "category": "fruit",
+  "grammar_note": "基础可数名词单数形式。",
+  "image_url": "[https://images.unsplash.com/](https://images.unsplash.com/)...",
+  "stage": 1,
+  "challenge_config": {
+    "time_limit": 15.0,
+    "base_xp": 10
+  },
   "user_status": {
-    "xp": 120,
-    "total_solved": 12,
-    "title": "语言学徒"
+    "xp": 100,
+    "total_solved": 0,
+    "title": "初学冒险者"
   }
 }
-🧠 2. 提交挑战
+🧠 2. 提交挑战结算
 HTTP POST: /api/challenge/submit
 
-Content-Type: application/json
-
-JSON 请求体：
+请求体 (Content-Type: application/json)：
 
 JSON
 {
+  "word_id": 1,
+  "stage": 3,
+  "used_time": 3.5,
+  "success": true,
   "difficulty": "normal",
-  "content": "hang out",
-  "used_time": 4,
-  "success": true,
-  "streak": 2
+  "streak": 2,
+  "bet_amount": 0
 }
-返回响应：
+响应示例：
 
 JSON
 {
   "success": true,
-  "grade": "S",
-  "used_time": 4,
+  "grade": "SS",
+  "stage": 3,
+  "used_time": 3.5,
   "streak": 3,
-  "interactive_comment": "干得漂亮！S 级通关，你的手速和记忆力简直无可挑剔！🔥",
+  "interactive_comment": "⚡ 闪电极速（3.5秒），SS级完美默写！",
   "earned_xp": 25,
   "user_profile": {
-    "xp": 145,
-    "total_solved": 13,
-    "title": "语言学徒"
+    "xp": 125,
+    "total_solved": 1,
+    "title": "初学冒险者"
   }
 }
-🏆 3. 查看排行榜（支持分页）
-HTTP GET: /api/leaderboard?limit=10&offset=0
-
 🧱 技术栈
 Python 3.8+
 
-Flask 3.x（现代化 Web 框架，采用应用上下文与请求生命周期管理）
+Flask 3.x（现代化 Web 框架，采用 Blueprint 蓝图模块化与应用上下文管理）
 
-Flask-CORS（处理跨域请求，完美支撑前后端分离架构）
+Flask-CORS（处理跨域资源共享，完美支撑前后端分离）
 
 SQLite（内置轻量数据库，零外部服务依赖）
 
-RESTful API 设计规范与完整 unittest 单元测试覆盖
-
-🌱 未来规划
-[ ] 用户名 / 昵称排行榜系统
-
-[ ] 网页端炫酷 RPG 闯关 UI 皮肤自由切换
-
-[ ] 成就系统与连续打卡统计面板
+unittest（内建完整的自动化单元测试覆盖，运行 python test_app.py 即可验证）
 
 ⭐ 支持这个项目
-如果这个项目对你有帮助或启发：
+如果这个项目对你的英语学习或项目开发有所帮助：
 
 ⭐ 给仓库点个 Star
 
 🍴 Fork 进行二次开发
 
-🐛 提 Issue 或提出建议
+🐛 提 Issue 或提出宝贵建议
 
 一个 Star 就是持续维护的最大动力 ❤
 

@@ -1,11 +1,11 @@
 {
   "project_name": "daily-english-word-api",
-  "description": "一个基于 Flask 的开源级游戏化地道美语、俚语、长句与语法学习 API，完美支持多邻国式三阶段阶梯学习（认读、拼写、极限默写挑战）、多难度关卡（Easy 至 Hell）、冒险者杂货铺与背包系统、XP 经验值称号系统、动态时间限制与防作弊校验。",
+  "description": "一个基于 Flask 模块化蓝图架构的开源级游戏化地道美语、俚语、长句与语法学习 API，完美支持多邻国式三阶段阶梯学习（认读、拼写、极限默写挑战）、多难度关卡（Easy 至 Hell）、冒险者杂货铺与背包管理系统、XP 经验值称号系统、动态时间限制与防作弊校验。",
   "owner": "yiyuanqian111666",
   "repo": "daily-english-word-api",
   "license": "MIT",
   "language": "Python",
-  "framework": "Flask",
+  "framework": "Flask (Blueprint Modular)",
   "independent": true,
   "public": true,
   "homepage": "https://github.com/yiyuanqian111666/daily-english-word-api",
@@ -29,7 +29,8 @@
     "flask-cors",
     "shop-system",
     "inventory",
-    "challenge-mode"
+    "challenge-mode",
+    "blueprint-architecture"
   ],
 
   "topics": [
@@ -44,14 +45,16 @@
     "后端开发",
     "游戏化背单词系统",
     "前后端分离",
-    "冒险商店系统"
+    "冒险商店系统",
+    "模块化架构"
   ],
 
   "features": [
     "海量高质量地道美语、美剧俚语与真实情境长句词库",
-    "多邻国式三阶段渐进式学习闭环（阶段一：沉浸式认读 $\rightarrow$ 阶段二：互动式拼写辅助 $\rightarrow$ 阶段三：极限盲打默写挑战）",
+    "现代化 Flask Blueprint 蓝图解耦架构，实现高内聚低耦合",
+    "多邻国式三阶段渐进式学习闭环（阶段一：沉浸式认读 → 阶段二：互动式拼写辅助 → 阶段三：极限盲打默写挑战）",
     "多维度难度关卡（Easy, Normal, Hard, Hell）及各难度独立的倒计时限时与 XP 经验值奖励基底",
-    "冒险者杂货铺与用户背包系统，支持使用 XP 购买双倍经验药水、错题免死金牌与稀有/传奇称号",
+    "冒险者杂货铺与用户背包管理系统，支持使用 XP 购买双倍经验药水、错题免死金牌与稀有/传奇动态称号",
     "语法解析（grammar_note）与地道示例展示、图片直观辅助认读",
     "自动初始化内置海量词库、商店道具与 RPG 个人成长属性表",
     "挑战模式（限时拼写打字与防作弊安全校验）",
@@ -69,7 +72,7 @@
     "email": "yiyuanqian666@outlook.com"
   },
 
-  "version": "9.0.0",
+  "version": "10.0.0",
   "created_at": "2025-07-15",
-  "updated_at": "2026-10-10"
+  "updated_at": "2026-10-12"
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPG 英语冒险 - 多邻国式三阶段进阶与挑战系统</title>
+    <title>RPG 英语冒险 - 多邻国式三阶段进阶与挑战系统 (v10.0)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
@@ -32,7 +32,7 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-lg text-white tracking-wide">RPG 英语世界</h1>
-                    <p class="text-xs text-slate-400">多邻国三阶段渐进式版 v9.0</p>
+                    <p class="text-xs text-slate-400">多邻国三阶段渐进式版 v10.0</p>
                 </div>
             </div>
 
@@ -63,7 +63,7 @@
         <div id="view-map" class="space-y-6">
             <div class="text-center mb-8">
                 <h2 class="text-2xl font-extrabold text-white mb-2">选择你的学习难度与关卡</h2>
-                <p class="text-sm text-slate-400">多邻国式阶梯学习：先学会认读 $\rightarrow$ 再进行拼写训练 $\rightarrow$ 最后挑战极限默写！</p>
+                <p class="text-sm text-slate-400">多邻国式阶梯学习：先学会认读 → 再进行拼写训练 → 最后挑战极限默写！</p>
             </div>
 
             <!-- 难度选择面板 -->
@@ -95,7 +95,7 @@
                             <i class="fa-solid fa-stairs"></i>
                         </div>
                         <h3 class="text-lg font-bold text-white mb-1">🚀 开始三阶段渐进特训</h3>
-                        <p class="text-xs text-slate-400 mb-4">执行多邻国标准流程：<br>1. 沉浸认读 $\rightarrow$ 2. 互动拼写 $\rightarrow$ 3. 极限默写挑战。</p>
+                        <p class="text-xs text-slate-400 mb-4">执行多邻国标准流程：<br>1. 沉浸认读 → 2. 互动拼写 → 3. 极限默写挑战。</p>
                     </div>
                     <div class="flex justify-between items-center text-xs text-purple-400 font-semibold pt-4 border-t border-slate-800">
                         <span>当前选中难度: <span id="current-selected-diff" class="text-white uppercase">easy</span></span>
@@ -186,9 +186,9 @@
         </div>
     </div>
 
-    <!-- 游戏逻辑脚本 -->
+    <!-- 游戏逻辑脚本 (适配 v10.0 后端 Blueprint 路由) -->
     <script>
-        const API_BASE = "http://127.0.0.1:5000";
+        const API_BASE = "http://127.0.0.1:5000/api";
         let selectedDifficulty = "easy";
         let currentStage = 1; // 1: 认读, 2: 拼写, 3: 极限默写
         let currentWordData = null;
@@ -289,7 +289,7 @@
         // === 从后端获取一个新单词 ===
         async function fetchNewWord() {
             try {
-                const res = await fetch(`${API_BASE}/api/learn?difficulty=${selectedDifficulty}`);
+                const res = await fetch(`${API_BASE}/learn?difficulty=${selectedDifficulty}`);
                 const data = await res.json();
                 currentWordData = data;
                 currentStage = 1; // 每次拿到新词从阶段一开始
@@ -467,7 +467,7 @@
             }
 
             try {
-                const res = await fetch(`${API_BASE}/api/challenge/submit`, {
+                const res = await fetch(`${API_BASE}/challenge/submit`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -516,7 +516,7 @@
         // === 商店与背包 ===
         async function loadShopItems() {
             try {
-                const res = await fetch(`${API_BASE}/api/shop/items`);
+                const res = await fetch(`${API_BASE}/shop/items`);
                 const data = await res.json();
                 const grid = document.getElementById('shop-grid');
                 grid.innerHTML = '';
@@ -545,7 +545,7 @@
 
         async function buyItem(itemId) {
             try {
-                const res = await fetch(`${API_BASE}/api/shop/buy`, {
+                const res = await fetch(`${API_BASE}/shop/buy`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ item_id: itemId })
@@ -569,7 +569,7 @@
             const modal = document.getElementById('inventory-modal');
             modal.classList.remove('hidden');
             try {
-                const res = await fetch(`${API_BASE}/api/inventory`);
+                const res = await fetch(`${API_BASE}/inventory`);
                 const data = await res.json();
                 const list = document.getElementById('inventory-list');
                 list.innerHTML = '';
