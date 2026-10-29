@@ -66,7 +66,6 @@
                 <p class="text-sm text-slate-400">多邻国式阶梯学习：先学会认读 → 再进行拼写训练 → 最后挑战极限默写！</p>
             </div>
 
-            <!-- 难度选择面板 -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <button onclick="selectDifficulty('easy')" id="btn-diff-easy" class="diff-btn bg-blue-900/30 border border-blue-500/60 hover:border-blue-400 p-4 rounded-xl text-center transition">
                     <div class="text-blue-400 font-bold text-base mb-1">🟢 简单</div>
@@ -86,9 +85,7 @@
                 </button>
             </div>
 
-            <!-- 关卡启动卡片 -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- 三阶段闯关入口 -->
                 <div onclick="startStageFlow()" class="bg-gradient-to-br from-purple-900/40 to-slate-900 border border-purple-500/40 hover:border-purple-400 rounded-2xl p-6 cursor-pointer transition transform hover:-translate-y-1 shadow-xl flex flex-col justify-between">
                     <div>
                         <div class="w-12 h-12 bg-purple-500/20 text-purple-400 rounded-xl flex items-center justify-center text-xl mb-4 border border-purple-500/30">
@@ -103,7 +100,6 @@
                     </div>
                 </div>
 
-                <!-- 冒险商店入口 -->
                 <div onclick="loadShopItems(); document.getElementById('shop-section').scrollIntoView({behavior: 'smooth'})" class="bg-gradient-to-br from-blue-900/40 to-slate-900 border border-blue-500/40 hover:border-blue-400 rounded-2xl p-6 cursor-pointer transition transform hover:-translate-y-1 shadow-xl flex flex-col justify-between">
                     <div>
                         <div class="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center text-xl mb-4 border border-blue-500/30">
@@ -120,10 +116,8 @@
             </div>
         </div>
 
-        <!-- 视图 2：三阶段互动游戏区（默认隐藏） -->
+        <!-- 视图 2：三阶段互动游戏区 -->
         <div id="view-game" class="hidden bg-rpgcard border border-slate-700/80 rounded-2xl shadow-xl p-6 md:p-8 relative overflow-hidden mb-8">
-            
-            <!-- 顶栏状态与退出按钮 -->
             <div class="flex justify-between items-center mb-6 text-xs text-slate-400 border-b border-slate-700/50 pb-4">
                 <div class="flex items-center space-x-2">
                     <button onclick="backToMap()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition border border-slate-600">
@@ -137,18 +131,9 @@
                 </div>
             </div>
 
-            <!-- 三阶段动态题目容器 -->
-            <div id="question-container" class="text-center mb-6">
-                <!-- 动态填充 -->
-            </div>
-
-            <!-- 反馈提示栏 -->
+            <div id="question-container" class="text-center mb-6"></div>
             <div id="feedback-box" class="hidden rounded-xl p-4 text-center text-sm font-medium transition animate-fade-in mb-4"></div>
-
-            <!-- 底部操作按钮 -->
-            <div class="text-center" id="action-btn-container">
-                <!-- 动态由 JS 填充按钮 -->
-            </div>
+            <div class="text-center" id="action-btn-container"></div>
         </div>
 
         <!-- 冒险商店区域 -->
@@ -186,20 +171,20 @@
         </div>
     </div>
 
-    <!-- 游戏逻辑脚本 (适配 v10.0 后端 Blueprint 路由) -->
+    <!-- 游戏逻辑脚本 -->
     <script>
         const API_BASE = "http://127.0.0.1:5000/api";
         let selectedDifficulty = "easy";
-        let currentStage = 1; // 1: 认读, 2: 拼写, 3: 极限默写
+        let currentStage = 1;
         let currentWordData = null;
         let streak = 0;
         let timerInterval = null;
         let timeLeft = 15.0;
 
-        // === 音效系统 ===
         let audioCtx = null;
         function getAudioContext() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             return audioCtx;
         }
 
@@ -250,15 +235,20 @@
         }
 
         function speakText(text) {
-            if (!('speechSynthesis' in window)) return;
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US';
-            utterance.rate = 0.9;
-            window.speechSynthesis.speak(utterance);
+            playClickSound();
+            if (!text) return;
+            const audioUrl = `https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(text)}&type=2`;
+            const audio = new Audio(audioUrl);
+            audio.play().catch(() => {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'en-US';
+                    window.speechSynthesis.speak(utterance);
+                }
+            });
         }
 
-        // === 难度选择 ===
         function selectDifficulty(diff) {
             playClickSound();
             selectedDifficulty = diff;
@@ -269,7 +259,6 @@
             document.getElementById('current-selected-diff').innerText = diff;
         }
 
-        // === 启动三阶段学习流 ===
         function startStageFlow() {
             playClickSound();
             currentStage = 1; 
@@ -286,14 +275,17 @@
             document.getElementById('view-map').classList.remove('hidden');
         }
 
-        // === 从后端获取一个新单词 ===
         async function fetchNewWord() {
             try {
                 const res = await fetch(`${API_BASE}/learn?difficulty=${selectedDifficulty}`);
                 const data = await res.json();
                 currentWordData = data;
-                currentStage = 1; // 每次拿到新词从阶段一开始
+                currentStage = 1;
                 
+                if (data.user_status) {
+                    updateUserProfile(data.user_status);
+                }
+
                 document.getElementById('feedback-box').classList.add('hidden');
                 updateStageHeader();
                 renderStageContent();
@@ -332,7 +324,6 @@
             }, 100);
         }
 
-        // === 渲染各阶段界面 ===
         function renderStageContent() {
             const container = document.getElementById('question-container');
             const btnContainer = document.getElementById('action-btn-container');
@@ -343,7 +334,7 @@
                     <div class="mb-4">
                         ${data.image_url ? `<img src="${data.image_url}" class="w-48 h-32 object-cover mx-auto rounded-xl mb-4 border border-slate-700 shadow-md">` : ''}
                         <h3 class="text-3xl font-extrabold text-white mb-2">${data.word}</h3>
-                        <button onclick="speakText('${data.word}')" class="bg-rpgaccent/20 hover:bg-rpgaccent/40 text-rpgaccent px-4 py-2 rounded-full border border-rpgaccent/40 text-xs transition mb-3">
+                        <button onclick="speakText('${data.word.replace(/'/g, "\\'")}')" class="bg-rpgaccent/20 hover:bg-rpgaccent/40 active:scale-95 text-rpgaccent px-4 py-2 rounded-full border border-rpgaccent/40 text-xs transition mb-3">
                             <i class="fa-solid fa-volume-high mr-1.5"></i> 播放标准发音
                         </button>
                         <h4 class="text-xl font-bold text-rpggold mb-2">${data.meaning}</h4>
@@ -415,23 +406,62 @@
             return arr;
         }
 
-        // === 阶段一流转 ===
-        function nextStage() {
+        async function nextStage() {
             playSuccessSound();
+            try {
+                const res = await fetch(`${API_BASE}/challenge/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        word_id: currentWordData.id,
+                        stage: 1,
+                        used_time: 1.0,
+                        success: true, // 显式传递标准布尔值
+                        difficulty: selectedDifficulty
+                    })
+                });
+                const result = await res.json();
+                if (res.ok && result.user_profile) {
+                    updateUserProfile(result.user_profile);
+                }
+            } catch (e) {
+                console.error("阶段一同步错误:", e);
+            }
+
             currentStage = 2;
             updateStageHeader();
             renderStageContent();
         }
 
-        // === 阶段二校验 ===
-        function checkStage2() {
+        async function checkStage2() {
             const inputEl = document.getElementById('user-input');
             const typed = inputEl ? inputEl.value.trim() : "";
             const target = currentWordData.word.trim();
 
             if (typed.toLowerCase() === target.toLowerCase()) {
                 playSuccessSound();
-                showFeedback(true, "✍️ 拼写辅助通过，进入终极盲打默写！", 15);
+                showFeedback(true, "✍️ 拼写辅助通过，获得拼写 XP 奖励！进入终极盲打默写！", 15);
+                
+                try {
+                    const res = await fetch(`${API_BASE}/challenge/submit`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            word_id: currentWordData.id,
+                            stage: 2,
+                            used_time: 2.0,
+                            success: true, // 显式传递标准布尔值
+                            difficulty: selectedDifficulty
+                        })
+                    });
+                    const result = await res.json();
+                    if (res.ok && result.user_profile) {
+                        updateUserProfile(result.user_profile);
+                    }
+                } catch (e) {
+                    console.error("阶段二同步错误:", e);
+                }
+
                 currentStage = 3;
                 setTimeout(() => {
                     updateStageHeader();
@@ -443,7 +473,6 @@
             }
         }
 
-        // === 阶段三校验与后端结算 ===
         function checkStage3() {
             if (timerInterval) clearInterval(timerInterval);
             const usedTime = currentWordData.challenge_config.time_limit - timeLeft;
@@ -473,8 +502,8 @@
                     body: JSON.stringify({
                         word_id: currentWordData.id,
                         stage: 3,
-                        used_time: usedTime,
-                        success: success,
+                        used_time: usedTime > 0 ? usedTime : 1.0,
+                        success: Boolean(success), // 确保强转为布尔类型
                         difficulty: selectedDifficulty,
                         streak: streak
                     })
@@ -483,11 +512,13 @@
 
                 if (res.ok) {
                     showFeedback(result.success, result.interactive_comment, result.earned_xp);
-                    updateUserProfile(result.user_profile);
+                    if (result.user_profile) {
+                        updateUserProfile(result.user_profile);
+                    }
 
                     if (success) {
                         setTimeout(() => {
-                            fetchNewWord(); // 顺利通关第三阶段，获取下一个新单词
+                            fetchNewWord(); 
                         }, 1600);
                     }
                 }
@@ -509,15 +540,24 @@
         }
 
         function updateUserProfile(profile) {
-            document.getElementById('user-xp').innerText = profile.xp;
-            document.getElementById('user-title').innerText = profile.title;
+            if (!profile) return;
+            if (profile.xp !== undefined) {
+                document.getElementById('user-xp').innerText = profile.xp;
+            }
+            if (profile.title) {
+                document.getElementById('user-title').innerText = profile.title;
+            }
         }
 
-        // === 商店与背包 ===
         async function loadShopItems() {
             try {
                 const res = await fetch(`${API_BASE}/shop/items`);
                 const data = await res.json();
+                
+                if (data.user_xp !== undefined) {
+                    updateUserProfile({ xp: data.user_xp });
+                }
+
                 const grid = document.getElementById('shop-grid');
                 grid.innerHTML = '';
 
@@ -554,8 +594,12 @@
                 if (res.ok) {
                     playSuccessSound();
                     alert(result.message);
-                    document.getElementById('user-xp').innerText = result.remaining_xp;
-                    document.getElementById('user-title').innerText = result.user_profile.title;
+                    if (result.user_profile) {
+                        updateUserProfile(result.user_profile);
+                    } else if (result.remaining_xp !== undefined) {
+                        updateUserProfile({ xp: result.remaining_xp });
+                    }
+                    loadShopItems();
                 } else {
                     playFailSound();
                     alert(result.error || "购买失败");
